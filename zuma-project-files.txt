@@ -1,0 +1,5627 @@
+===FILE: src/app/ai-assistant-chat/components/AIAssistantChatInteractive.tsx===
+'use client';
+
+import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import Header from '@/components/common/Header';
+import ChatHeader from './ChatHeader';
+import MessageList from './MessageList';
+import ChatInput from './ChatInput';
+import QuickActions from './QuickActions';
+
+interface Message {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+  imageUrl?: string;
+  imageAlt?: string;
+}
+
+interface QuickAction {
+  id: string;
+  label: string;
+  query: string;
+  icon: string;
+}
+
+export default function AIAssistantChatInteractive() {
+  const router = useRouter();
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isTyping, setIsTyping] = useState(false);
+  const [userRole, setUserRole] = useState<'producer' | 'buyer' | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setIsHydrated(true);
+    
+    // Simulate role detection from localStorage
+    const role = 'producer' as 'producer' | 'buyer';
+    setUserRole(role);
+
+    // Initial greeting message
+    const greeting: Message = {
+      id: '1',
+      role: 'assistant',
+      content: '¡Hola! Soy tu asistente IA de ZUMA Marketplace. Puedo ayudarte con:\n\n• Análisis de precios de mercado\n• Evaluación de calidad de cultivos\n• Estrategias de venta\n• Navegación de la plataforma\n\n¿En qué puedo asistirte hoy?',
+      timestamp: new Date()
+    };
+    setMessages([greeting]);
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleSendMessage = (content: string, imageUrl?: string, imageAlt?: string) => {
+    if (!content.trim() && !imageUrl) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: content.trim(),
+      timestamp: new Date(),
+      imageUrl,
+      imageAlt
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setIsTyping(true);
+
+    // Simulate AI response
+    setTimeout(() => {
+      const aiResponse = generateAIResponse(content, imageUrl, userRole);
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: aiResponse,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, assistantMessage]);
+      setIsTyping(false);
+    }, 1500);
+  };
+
+  const handleQuickAction = (query: string) => {
+    handleSendMessage(query);
+  };
+
+  const handleClose = () => {
+    router.back();
+  };
+
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-pulse text-muted-foreground">Cargando asistente...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      <Header userRole={userRole} />
+      
+      <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
+        <ChatHeader onClose={handleClose} />
+        
+        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
+          <MessageList messages={messages} isTyping={isTyping} />
+          <div ref={messagesEndRef} />
+        </div>
+
+        {messages.length === 1 && (
+          <QuickActions onActionClick={handleQuickAction} userRole={userRole} />
+        )}
+
+        <ChatInput onSendMessage={handleSendMessage} />
+      </div>
+    </div>
+  );
+}
+
+function generateAIResponse(query: string, hasImage: boolean | undefined, role: 'producer' | 'buyer' | null): string {
+  const lowerQuery = query.toLowerCase();
+
+  if (hasImage) {
+    return 'He analizado tu imagen. Basándome en la calidad visual:\n\n• **Calidad:** Premium/Alta\n• **Estado:** Óptimo para comercialización\n• **Recomendación de precio:** $45-55 USD/kg\n• **Certificación sugerida:** Orgánico\n\nLa coloración y textura indican excelente maduración. Te recomiendo destacar estas características en tu oferta.';
+  }
+
+  if (lowerQuery.includes('precio') || lowerQuery.includes('mercado')) {
+    return 'Según el análisis de mercado actual (Noviembre 2025):\n\n**Cacao Premium:**\n• Precio internacional: $48-52 USD/kg\n• Demanda: Alta (↑15% vs mes anterior)\n• Tendencia: Alcista\n\n**Café Especial:**\n• Precio internacional: $38-42 USD/kg\n• Demanda: Muy Alta\n• Tendencia: Estable\n\n**Plátano Orgánico:**\n• Precio internacional: $12-15 USD/kg\n• Demanda: Moderada\n• Tendencia: Estable\n\n¿Necesitas análisis específico para algún cultivo?';
+  }
+
+  if (lowerQuery.includes('calidad') || lowerQuery.includes('cultivo')) {
+    return 'Para evaluar la calidad de tu cultivo, considera:\n\n**Factores Clave:**\n• Coloración uniforme y brillante\n• Ausencia de defectos o manchas\n• Tamaño consistente\n• Aroma característico\n• Humedad adecuada (10-12%)\n\n**Certificaciones Recomendadas:**\n• Orgánico (+25% precio)\n• Comercio Justo (+15% precio)\n• Denominación de Origen\n\n¿Quieres que analice fotos de tu cultivo?';
+  }
+
+  if (lowerQuery.includes('vender') || lowerQuery.includes('oferta')) {
+    return 'Consejos para crear una oferta exitosa:\n\n**1. Fotografías de Calidad**\n• Usa luz natural\n• Muestra diferentes ángulos\n• Incluye close-ups de textura\n\n**2. Descripción Detallada**\n• Especifica origen y variedad\n• Menciona certificaciones\n• Destaca características únicas\n\n**3. Precio Competitivo**\n• Usa "Precio Justo IA" para referencia\n• Considera costos de envío\n• Ofrece descuentos por volumen\n\n¿Necesitas ayuda con algún aspecto específico?';
+  }
+
+  if (role === 'buyer' && (lowerQuery.includes('comprar') || lowerQuery.includes('productor'))) {
+    return 'Para conectar con productores:\n\n**1. Explora el Marketplace**\n• Filtra por tipo de cultivo\n• Revisa certificaciones\n• Compara precios\n\n**2. Contacto Directo**\n• Usa WhatsApp integrado\n• Pregunta sobre disponibilidad\n• Solicita muestras si es necesario\n\n**3. Verificación**\n• Revisa perfil del productor\n• Lee reseñas de otros compradores\n• Confirma términos de envío\n\n¿Buscas algún cultivo específico?';
+  }
+
+  return 'Entiendo tu consulta. Como asistente especializado en agricultura venezolana, puedo ayudarte con:\n\n• **Análisis de precios** en tiempo real\n• **Evaluación de calidad** mediante fotos\n• **Estrategias de venta** personalizadas\n• **Conexión con compradores** internacionales\n• **Certificaciones** y mejores prácticas\n\n¿Podrías darme más detalles sobre lo que necesitas?';
+}
+
+===FILE: src/app/ai-assistant-chat/components/ChatHeader.tsx===
+'use client';
+
+import Image from 'next/image';
+import Icon from '@/components/ui/AppIcon';
+
+interface ChatHeaderProps {
+  onClose: () => void;
+}
+
+export default function ChatHeader({ onClose }: ChatHeaderProps) {
+  return (
+    <div className="sticky top-16 z-40 bg-card border-b border-border shadow-sm">
+      <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center overflow-hidden">
+            <Image
+              src="/assets/images/upscalemedia-transformed_1_-1763869666562.png"
+              alt="ZUMA logo"
+              width={40}
+              height={40}
+              className="object-contain"
+            />
+          </div>
+          <div>
+            <h1 className="font-heading text-lg font-semibold text-foreground">
+              Asistente IA ZUMA
+            </h1>
+            <p className="text-xs text-muted-foreground">
+              Powered by Google Gemini
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={onClose}
+          className="p-2 hover:bg-muted rounded-md transition-all animation-ease-out"
+          aria-label="Cerrar chat"
+        >
+          <Icon name="XMarkIcon" size={24} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+===FILE: src/app/ai-assistant-chat/components/ChatInput.tsx===
+'use client';
+
+import { useState, useRef } from 'react';
+import Icon from '@/components/ui/AppIcon';
+
+interface ChatInputProps {
+  onSendMessage: (content: string, imageUrl?: string, imageAlt?: string) => void;
+}
+
+export default function ChatInput({ onSendMessage }: ChatInputProps) {
+  const [message, setMessage] = useState('');
+  const [selectedImage, setSelectedImage] = useState<{ url: string; alt: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (message.trim() || selectedImage) {
+      onSendMessage(message, selectedImage?.url, selectedImage?.alt);
+      setMessage('');
+      setSelectedImage(null);
+    }
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Mock image URL - in production, this would upload to storage
+      const mockImageUrl = 'https://images.pexels.com/photos/4750274/pexels-photo-4750274.jpeg?auto=compress&cs=tinysrgb&w=800';
+      const mockImageAlt = 'Granos de cacao venezolano de alta calidad con coloración marrón oscuro uniforme';
+      setSelectedImage({ url: mockImageUrl, alt: mockImageAlt });
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  return (
+    <div className="sticky bottom-0 bg-background border-t border-border p-4">
+      <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
+        {selectedImage && (
+          <div className="mb-3 relative inline-block">
+            <div className="w-20 h-20 rounded-md overflow-hidden border-2 border-primary">
+              <img
+                src={selectedImage.url}
+                alt={selectedImage.alt}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleRemoveImage}
+              className="absolute -top-2 -right-2 w-6 h-6 bg-error text-error-foreground rounded-full flex items-center justify-center shadow-md hover:bg-error/90 transition-colors"
+            >
+              <Icon name="XMarkIcon" size={16} />
+            </button>
+          </div>
+        )}
+
+        <div className="flex items-end gap-2">
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept="image/*"
+            onChange={handleImageSelect}
+            className="hidden"
+          />
+          
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex-shrink-0 p-3 rounded-full hover:bg-muted transition-all animation-ease-out"
+            aria-label="Adjuntar imagen"
+          >
+            <Icon name="PhotoIcon" size={24} className="text-muted-foreground" />
+          </button>
+
+          <div className="flex-1 relative">
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Escribe tu pregunta..."
+              rows={1}
+              className="
+                w-full px-4 py-3 pr-12
+                border border-input rounded-lg
+                bg-background text-foreground
+                placeholder:text-muted-foreground
+                focus:outline-none focus:ring-2 focus:ring-ring
+                resize-none
+                max-h-32
+              "
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }
+              }}
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={!message.trim() && !selectedImage}
+            className="
+              flex-shrink-0 p-3 rounded-full
+              bg-primary text-primary-foreground
+              hover:bg-primary/90
+              disabled:opacity-50 disabled:cursor-not-allowed
+              transition-all animation-ease-out
+              shadow-md hover:shadow-lg
+            "
+            aria-label="Enviar mensaje"
+          >
+            <Icon name="PaperAirplaneIcon" size={24} variant="solid" />
+          </button>
+        </div>
+
+        <p className="text-xs text-muted-foreground mt-2 text-center">
+          Presiona Enter para enviar, Shift+Enter para nueva línea
+        </p>
+      </form>
+    </div>
+  );
+}
+
+===FILE: src/app/ai-assistant-chat/components/MessageList.tsx===
+'use client';
+
+import { useState, useEffect } from 'react';
+import AppImage from '@/components/ui/AppImage';
+import Icon from '@/components/ui/AppIcon';
+
+interface Message {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+  imageUrl?: string;
+  imageAlt?: string;
+}
+
+interface MessageListProps {
+  messages: Message[];
+  isTyping: boolean;
+}
+
+export default function MessageList({ messages, isTyping }: MessageListProps) {
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  const formatTime = (date: Date) => {
+    if (!isHydrated) return '';
+    return date.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  return (
+    <>
+      {messages.map((message) => (
+        <div
+          key={message.id}
+          className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+        >
+          <div
+            className={`
+              max-w-[85%] md:max-w-[70%] rounded-lg px-4 py-3
+              ${message.role === 'user' ?'bg-primary text-primary-foreground' :'bg-card border border-border text-foreground'
+              }
+            `}
+          >
+            {message.imageUrl && (
+              <div className="mb-3 rounded-md overflow-hidden">
+                <AppImage
+                  src={message.imageUrl}
+                  alt={message.imageAlt || 'Imagen enviada por el usuario'}
+                  className="w-full h-48 object-cover"
+                />
+              </div>
+            )}
+            
+            <p className="text-sm whitespace-pre-line leading-relaxed">
+              {message.content}
+            </p>
+            
+            <div className={`flex items-center gap-1 mt-2 text-xs ${
+              message.role === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'
+            }`}>
+              <span>{formatTime(message.timestamp)}</span>
+              {message.role === 'user' && (
+                <Icon name="CheckIcon" size={14} className="ml-1" />
+              )}
+            </div>
+          </div>
+        </div>
+      ))}
+
+      {isTyping && (
+        <div className="flex justify-start">
+          <div className="bg-card border border-border rounded-lg px-4 py-3 max-w-[85%] md:max-w-[70%]">
+            <div className="flex items-center gap-2">
+              <div className="flex gap-1">
+                <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
+              <span className="text-xs text-muted-foreground">Escribiendo...</span>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+===FILE: src/app/ai-assistant-chat/components/QuickActions.tsx===
+'use client';
+
+import Icon from '@/components/ui/AppIcon';
+
+interface QuickAction {
+  id: string;
+  label: string;
+  query: string;
+  icon: string;
+}
+
+interface QuickActionsProps {
+  onActionClick: (query: string) => void;
+  userRole: 'producer' | 'buyer' | null;
+}
+
+export default function QuickActions({ onActionClick, userRole }: QuickActionsProps) {
+  const producerActions: QuickAction[] = [
+    {
+      id: '1',
+      label: 'Precio de Mercado',
+      query: '¿Cuál es el precio actual del cacao en el mercado internacional?',
+      icon: 'CurrencyDollarIcon'
+    },
+    {
+      id: '2',
+      label: 'Calidad de Cultivo',
+      query: '¿Cómo puedo evaluar la calidad de mi cultivo de café?',
+      icon: 'BeakerIcon'
+    },
+    {
+      id: '3',
+      label: 'Crear Oferta',
+      query: '¿Qué debo incluir en mi oferta para atraer compradores?',
+      icon: 'PlusCircleIcon'
+    },
+    {
+      id: '4',
+      label: 'Certificaciones',
+      query: '¿Qué certificaciones aumentan el valor de mi producto?',
+      icon: 'ShieldCheckIcon'
+    }
+  ];
+
+  const buyerActions: QuickAction[] = [
+    {
+      id: '1',
+      label: 'Mejores Ofertas',
+      query: '¿Cuáles son las mejores ofertas de cacao disponibles ahora?',
+      icon: 'StarIcon'
+    },
+    {
+      id: '2',
+      label: 'Verificar Calidad',
+      query: '¿Cómo verifico la calidad de un producto antes de comprar?',
+      icon: 'MagnifyingGlassIcon'
+    },
+    {
+      id: '3',
+      label: 'Contactar Productor',
+      query: '¿Cómo me comunico con un productor?',
+      icon: 'ChatBubbleLeftRightIcon'
+    },
+    {
+      id: '4',
+      label: 'Precios Justos',
+      query: '¿Cómo sé si un precio es justo para el mercado actual?',
+      icon: 'ScaleIcon'
+    }
+  ];
+
+  const actions = userRole === 'producer' ? producerActions : buyerActions;
+
+  return (
+    <div className="px-4 pb-4">
+      <div className="max-w-4xl mx-auto">
+        <p className="text-sm text-muted-foreground mb-3 text-center">
+          Acciones rápidas:
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          {actions.map((action) => (
+            <button
+              key={action.id}
+              onClick={() => onActionClick(action.query)}
+              className="
+                flex items-center gap-3 p-3
+                bg-card border border-border rounded-lg
+                hover:bg-muted hover:border-primary
+                transition-all animation-ease-out
+                text-left
+              "
+            >
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Icon name={action.icon as any} size={20} className="text-primary" />
+              </div>
+              <span className="text-sm font-medium text-foreground">
+                {action.label}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+===FILE: src/app/ai-assistant-chat/page.tsx===
+import type { Metadata } from 'next';
+import AIAssistantChatInteractive from './components/AIAssistantChatInteractive';
+
+export const metadata: Metadata = {
+  title: 'Asistente IA - ZUMA Marketplace',
+  description: 'Obtén ayuda inteligente sobre precios de mercado, calidad de cultivos y estrategias de venta con nuestro asistente IA powered by Google Gemini.',
+};
+
+export default function AIAssistantChatPage() {
+  return <AIAssistantChatInteractive />;
+}
+
+===FILE: src/app/buyer-marketplace-feed/components/MarketplaceFeedInteractive.tsx===
+'use client';
+
+import { useState, useEffect } from 'react';
+import Header from '@/components/common/Header';
+import AIAssistantToggle from '@/components/common/AIAssistantToggle';
+import FilterPanel from '@/components/common/FilterPanel';
+import RecommendationsBanner from './RecommendationsBanner';
+import SortControls from './SortControls';
+import OfferCard from './OfferCard';
+import Icon from '@/components/ui/AppIcon';
+
+interface Offer {
+  id: string;
+  cropType: string;
+  title: string;
+  quantity: number;
+  unit: string;
+  priceUSD: number;
+  priceVES: number;
+  location: string;
+  producer: {
+    name: string;
+    verified: boolean;
+    rating: number;
+  };
+  images: Array<{url: string;alt: string;}>;
+  certifications: string[];
+  quality: string;
+  postedDate: string;
+}
+
+const MarketplaceFeedInteractive = () => {
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showRecommendations, setShowRecommendations] = useState(true);
+  const [currentSort, setCurrentSort] = useState('newest');
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  const mockOffers: Offer[] = [
+  {
+    id: '1',
+    cropType: 'Café',
+    title: 'Café Arábica Premium de Altura',
+    quantity: 500,
+    unit: 'kg',
+    priceUSD: 8.50,
+    priceVES: 310.50,
+    location: 'Mérida, Venezuela',
+    producer: {
+      name: 'Carlos Rodríguez',
+      verified: true,
+      rating: 4.8
+    },
+    images: [
+    {
+      url: "https://images.unsplash.com/photo-1729627271706-4d07829ec6ca",
+      alt: 'Granos de café arábica tostados de color marrón oscuro en saco de yute'
+    }],
+
+    certifications: ['Orgánico', 'Comercio Justo'],
+    quality: 'Premium',
+    postedDate: '2025-11-20'
+  },
+  {
+    id: '2',
+    cropType: 'Cacao',
+    title: 'Cacao Criollo Venezolano Certificado',
+    quantity: 300,
+    unit: 'kg',
+    priceUSD: 12.00,
+    priceVES: 438.00,
+    location: 'Táchira, Venezuela',
+    producer: {
+      name: 'María González',
+      verified: true,
+      rating: 4.9
+    },
+    images: [
+    {
+      url: "https://images.unsplash.com/photo-1623944178786-05ec1e44d38f",
+      alt: 'Mazorcas de cacao criollo maduras de color amarillo dorado en árbol'
+    }],
+
+    certifications: ['Orgánico'],
+    quality: 'Premium',
+    postedDate: '2025-11-21'
+  },
+  {
+    id: '3',
+    cropType: 'Plátano',
+    title: 'Plátano Hartón Fresco para Exportación',
+    quantity: 1000,
+    unit: 'kg',
+    priceUSD: 2.50,
+    priceVES: 91.25,
+    location: 'Zulia, Venezuela',
+    producer: {
+      name: 'José Martínez',
+      verified: false,
+      rating: 4.5
+    },
+    images: [
+    {
+      url: "https://images.unsplash.com/photo-1653671413140-a872808a3869",
+      alt: 'Racimo de plátanos hartón verdes recién cosechados en campo'
+    }],
+
+    certifications: [],
+    quality: 'Estándar',
+    postedDate: '2025-11-22'
+  },
+  {
+    id: '4',
+    cropType: 'Café',
+    title: 'Café Robusta de Montaña',
+    quantity: 750,
+    unit: 'kg',
+    priceUSD: 6.75,
+    priceVES: 246.38,
+    location: 'Lara, Venezuela',
+    producer: {
+      name: 'Ana Pérez',
+      verified: true,
+      rating: 4.7
+    },
+    images: [
+    {
+      url: "https://images.unsplash.com/photo-1654815439629-5e93cb7f74a1",
+      alt: 'Cerezas de café robusta rojas maduras en rama de cafeto'
+    }],
+
+    certifications: ['Comercio Justo'],
+    quality: 'Premium',
+    postedDate: '2025-11-19'
+  },
+  {
+    id: '5',
+    cropType: 'Cacao',
+    title: 'Cacao Trinitario Seleccionado',
+    quantity: 400,
+    unit: 'kg',
+    priceUSD: 10.50,
+    priceVES: 383.25,
+    location: 'Mérida, Venezuela',
+    producer: {
+      name: 'Luis Hernández',
+      verified: true,
+      rating: 4.6
+    },
+    images: [
+    {
+      url: "https://images.unsplash.com/photo-1708851157246-62932072a3c8",
+      alt: 'Granos de cacao trinitario fermentados de color marrón rojizo secándose al sol'
+    }],
+
+    certifications: ['Orgánico', 'Comercio Justo'],
+    quality: 'Premium',
+    postedDate: '2025-11-23'
+  },
+  {
+    id: '6',
+    cropType: 'Plátano',
+    title: 'Plátano Topocho Orgánico',
+    quantity: 600,
+    unit: 'kg',
+    priceUSD: 3.00,
+    priceVES: 109.50,
+    location: 'Táchira, Venezuela',
+    producer: {
+      name: 'Pedro Ramírez',
+      verified: false,
+      rating: 4.4
+    },
+    images: [
+    {
+      url: "https://images.unsplash.com/photo-1655865853880-10741b7fe0ca",
+      alt: 'Plátanos topocho maduros de color amarillo brillante en canasta de mimbre'
+    }],
+
+    certifications: ['Orgánico'],
+    quality: 'Premium',
+    postedDate: '2025-11-18'
+  }];
+
+
+  const handlePullToRefresh = async () => {
+    setIsRefreshing(true);
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    setIsRefreshing(false);
+  };
+
+  const handleFilterChange = (filters: any) => {
+    console.log('Filters changed:', filters);
+  };
+
+  const handleSortChange = (sortBy: string) => {
+    setCurrentSort(sortBy);
+    console.log('Sort changed:', sortBy);
+  };
+
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header userRole="buyer" />
+        <main className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6">
+          <div className="animate-pulse space-y-6">
+            <div className="h-24 bg-muted rounded-lg" />
+            <div className="h-12 bg-muted rounded-lg w-64" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) =>
+              <div key={i} className="h-96 bg-muted rounded-lg" />
+              )}
+            </div>
+          </div>
+        </main>
+      </div>);
+
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header userRole="buyer" />
+      
+      <main className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6">
+        {/* Pull to Refresh Indicator */}
+        {isRefreshing &&
+        <div className="flex justify-center mb-4">
+            <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full">
+              <Icon name="ArrowPathIcon" size={20} className="animate-spin" />
+              <span className="text-sm font-medium">Actualizando ofertas...</span>
+            </div>
+          </div>
+        }
+
+        {/* Recommendations Banner */}
+        {showRecommendations &&
+        <RecommendationsBanner onDismiss={() => setShowRecommendations(false)} />
+        }
+
+        {/* Controls Section */}
+        <div className="flex flex-col lg:flex-row gap-4 mb-6">
+          <div className="lg:w-64 flex-shrink-0">
+            <FilterPanel onFilterChange={handleFilterChange} />
+          </div>
+
+          <div className="flex-1">
+            {/* Sort & Results Count */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <h2 className="font-heading text-xl font-semibold text-foreground">
+                  Ofertas Disponibles
+                </h2>
+                <span className="px-3 py-1 bg-primary/10 text-primary text-sm font-medium rounded-full">
+                  {mockOffers.length}
+                </span>
+              </div>
+              <SortControls onSortChange={handleSortChange} />
+            </div>
+
+            {/* Offers Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {mockOffers.map((offer) =>
+              <OfferCard key={offer.id} offer={offer} />
+              )}
+            </div>
+
+            {/* Load More */}
+            <div className="mt-8 text-center">
+              <button className="px-6 py-3 bg-card border border-border rounded-md hover:bg-muted transition-all animation-ease-out font-medium text-foreground">
+                Cargar Más Ofertas
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <AIAssistantToggle />
+    </div>);
+
+};
+
+export default MarketplaceFeedInteractive;
+
+===FILE: src/app/buyer-marketplace-feed/components/OfferCard.tsx===
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import AppImage from '@/components/ui/AppImage';
+import Icon from '@/components/ui/AppIcon';
+
+interface OfferCardProps {
+  offer: {
+    id: string;
+    cropType: string;
+    title: string;
+    quantity: number;
+    unit: string;
+    priceUSD: number;
+    priceVES: number;
+    location: string;
+    producer: {
+      name: string;
+      verified: boolean;
+      rating: number;
+    };
+    images: Array<{ url: string; alt: string }>;
+    certifications: string[];
+    quality: string;
+    postedDate: string;
+  };
+}
+
+const OfferCard = ({ offer }: OfferCardProps) => {
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  const handleFavoriteToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsFavorite(!isFavorite);
+  };
+
+  const handleWhatsAppContact = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const message = encodeURIComponent(`Hola, estoy interesado en tu oferta: ${offer.title}`);
+    window.open(`https://wa.me/?text=${message}`, '_blank');
+  };
+
+  const getCropIcon = (cropType: string) => {
+    const icons: Record<string, string> = {
+      'Café': 'coffee',
+      'Cacao': 'cacao',
+      'Plátano': 'plantain'
+    };
+    return icons[cropType] || 'leaf';
+  };
+
+  const getCropColor = (cropType: string) => {
+    const colors: Record<string, string> = {
+      'Café': 'bg-secondary/10 text-secondary',
+      'Cacao': 'bg-primary/10 text-primary',
+      'Plátano': 'bg-accent/10 text-accent'
+    };
+    return colors[cropType] || 'bg-muted text-muted-foreground';
+  };
+
+  return (
+    <Link href={`/offer-details?id=${offer.id}`}>
+      <div className="group bg-card border border-border rounded-lg overflow-hidden hover:shadow-md transition-all animation-ease-out cursor-pointer">
+        {/* Image Section */}
+        <div className="relative h-48 overflow-hidden bg-muted">
+          <AppImage
+            src={offer.images[0].url}
+            alt={offer.images[0].alt}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+          
+          {/* Crop Type Badge */}
+          <div className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-medium ${getCropColor(offer.cropType)}`}>
+            {offer.cropType}
+          </div>
+
+          {/* Favorite Button */}
+          {isHydrated && (
+            <button
+              onClick={handleFavoriteToggle}
+              className="absolute top-3 right-3 w-8 h-8 bg-background/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-background transition-colors"
+              aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+            >
+              <Icon
+                name="HeartIcon"
+                size={18}
+                variant={isFavorite ? 'solid' : 'outline'}
+                className={isFavorite ? 'text-error' : 'text-foreground'}
+              />
+            </button>
+          )}
+
+          {/* Certifications */}
+          {offer.certifications.length > 0 && (
+            <div className="absolute bottom-3 left-3 flex gap-1">
+              {offer.certifications.map((cert, index) => (
+                <div
+                  key={index}
+                  className="px-2 py-1 bg-success/90 backdrop-blur-sm text-success-foreground text-xs font-medium rounded"
+                  title={cert}
+                >
+                  {cert === 'Orgánico' ? '🌿' : cert === 'Comercio Justo' ? '🤝' : '✓'}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Content Section */}
+        <div className="p-4">
+          {/* Title & Producer */}
+          <div className="mb-3">
+            <h3 className="font-heading text-lg font-semibold text-foreground mb-1 line-clamp-1">
+              {offer.title}
+            </h3>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">{offer.producer.name}</span>
+              {offer.producer.verified && (
+                <Icon name="CheckBadgeIcon" size={16} variant="solid" className="text-primary" />
+              )}
+            </div>
+          </div>
+
+          {/* Quantity & Quality */}
+          <div className="flex items-center gap-4 mb-3 text-sm">
+            <div className="flex items-center gap-1">
+              <Icon name="ScaleIcon" size={16} className="text-muted-foreground" />
+              <span className="text-foreground font-medium">
+                {offer.quantity} {offer.unit}
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Icon name="StarIcon" size={16} variant="solid" className="text-primary" />
+              <span className="text-foreground font-medium">{offer.quality}</span>
+            </div>
+          </div>
+
+          {/* Location */}
+          <div className="flex items-center gap-1 mb-3 text-sm text-muted-foreground">
+            <Icon name="MapPinIcon" size={16} />
+            <span>{offer.location}</span>
+          </div>
+
+          {/* Price & Actions */}
+          <div className="flex items-center justify-between pt-3 border-t border-border">
+            <div>
+              <div className="text-lg font-bold text-foreground">
+                ${offer.priceUSD.toLocaleString('es-VE', { minimumFractionDigits: 2 })}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Bs. {offer.priceVES.toLocaleString('es-VE')}
+              </div>
+            </div>
+
+            {isHydrated && (
+              <button
+                onClick={handleWhatsAppContact}
+                className="flex items-center gap-2 px-4 py-2 bg-accent text-accent-foreground rounded-md hover:bg-accent/90 transition-colors text-sm font-medium"
+              >
+                <Icon name="ChatBubbleLeftRightIcon" size={16} variant="solid" />
+                <span className="hidden sm:inline">Contactar</span>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+};
+
+export default OfferCard;
+
+===FILE: src/app/buyer-marketplace-feed/components/RecommendationsBanner.tsx===
+'use client';
+
+import { useState, useEffect } from 'react';
+import Icon from '@/components/ui/AppIcon';
+
+interface RecommendationsBannerProps {
+  onDismiss?: () => void;
+}
+
+const RecommendationsBanner = ({ onDismiss }: RecommendationsBannerProps) => {
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  const handleDismiss = () => {
+    setIsVisible(false);
+    onDismiss?.();
+  };
+
+  if (!isHydrated || !isVisible) {
+    return null;
+  }
+
+  return (
+    <div className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-lg p-4 mb-6">
+      <div className="flex items-start gap-3">
+        <div className="flex-shrink-0 w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+          <Icon name="SparklesIcon" size={20} variant="solid" className="text-primary" />
+        </div>
+        <div className="flex-1">
+          <h3 className="font-heading text-base font-semibold text-foreground mb-1">
+            Recomendaciones Inteligentes
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Basado en tus preferencias, te sugerimos explorar ofertas de café orgánico de Mérida y cacao premium de Táchira.
+          </p>
+        </div>
+        <button
+          onClick={handleDismiss}
+          className="flex-shrink-0 p-1 hover:bg-muted rounded-md transition-colors"
+          aria-label="Cerrar recomendaciones"
+        >
+          <Icon name="XMarkIcon" size={20} className="text-muted-foreground" />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default RecommendationsBanner;
+
+===FILE: src/app/buyer-marketplace-feed/components/SortControls.tsx===
+'use client';
+
+import { useState, useEffect } from 'react';
+import Icon from '@/components/ui/AppIcon';
+
+interface SortControlsProps {
+  onSortChange?: (sortBy: string) => void;
+  className?: string;
+}
+
+const SortControls = ({ onSortChange, className = '' }: SortControlsProps) => {
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [selectedSort, setSelectedSort] = useState('newest');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  const sortOptions = [
+    { id: 'newest', label: 'Más Recientes', icon: 'ClockIcon' },
+    { id: 'price-low', label: 'Precio: Menor a Mayor', icon: 'ArrowUpIcon' },
+    { id: 'price-high', label: 'Precio: Mayor a Menor', icon: 'ArrowDownIcon' },
+    { id: 'rating', label: 'Mejor Calificados', icon: 'StarIcon' }
+  ];
+
+  const handleSortChange = (sortId: string) => {
+    setSelectedSort(sortId);
+    setIsDropdownOpen(false);
+    onSortChange?.(sortId);
+  };
+
+  const selectedOption = sortOptions.find(opt => opt.id === selectedSort);
+
+  if (!isHydrated) {
+    return (
+      <div className={`flex items-center gap-2 ${className}`}>
+        <span className="text-sm text-muted-foreground">Ordenar por:</span>
+        <div className="h-10 w-40 bg-muted rounded-md animate-pulse" />
+      </div>
+    );
+  }
+
+  return (
+    <div className={`relative ${className}`}>
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground hidden sm:inline">Ordenar por:</span>
+        <button
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-md hover:bg-muted transition-all animation-ease-out"
+        >
+          <Icon name={selectedOption?.icon as any} size={18} />
+          <span className="text-sm font-medium text-foreground">{selectedOption?.label}</span>
+          <Icon 
+            name="ChevronDownIcon" 
+            size={16} 
+            className={`transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+          />
+        </button>
+      </div>
+
+      {isDropdownOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-[100]"
+            onClick={() => setIsDropdownOpen(false)}
+          />
+          <div className="absolute right-0 top-full mt-2 w-56 bg-popover border border-border rounded-md shadow-lg z-[101]">
+            {sortOptions.map(option => (
+              <button
+                key={option.id}
+                onClick={() => handleSortChange(option.id)}
+                className={`
+                  w-full flex items-center gap-3 px-4 py-3 text-left
+                  hover:bg-muted transition-all animation-ease-out
+                  ${selectedSort === option.id ? 'bg-muted' : ''}
+                `}
+              >
+                <Icon name={option.icon as any} size={18} />
+                <span className="text-sm font-medium text-foreground">{option.label}</span>
+                {selectedSort === option.id && (
+                  <Icon name="CheckIcon" size={16} className="ml-auto text-primary" />
+                )}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+export default SortControls;
+
+===FILE: src/app/buyer-marketplace-feed/page.tsx===
+import type { Metadata } from 'next';
+import MarketplaceFeedInteractive from './components/MarketplaceFeedInteractive';
+
+export const metadata: Metadata = {
+  title: 'Marketplace - ZUMA',
+  description: 'Descubre y conecta con productores venezolanos de café, cacao y plátano. Explora ofertas verificadas con precios justos y certificaciones orgánicas.',
+};
+
+export default function BuyerMarketplaceFeedPage() {
+  return <MarketplaceFeedInteractive />;
+}
+
+===FILE: src/app/offer-details/components/AIQualityAssessment.tsx===
+import Icon from '@/components/ui/AppIcon';
+
+interface AIQualityAssessmentProps {
+  overallScore: number;
+  visualQuality: number;
+  ripeness: number;
+  consistency: number;
+  analysis: string;
+  recommendations: string[];
+}
+
+const AIQualityAssessment = ({
+  overallScore,
+  visualQuality,
+  ripeness,
+  consistency,
+  analysis,
+  recommendations
+}: AIQualityAssessmentProps) => {
+  const getScoreColor = (score: number) => {
+    if (score >= 90) return 'text-accent';
+    if (score >= 75) return 'text-primary';
+    return 'text-warning';
+  };
+
+  const getScoreBgColor = (score: number) => {
+    if (score >= 90) return 'bg-accent/10';
+    if (score >= 75) return 'bg-primary/10';
+    return 'bg-warning/10';
+  };
+
+  return (
+    <div className="bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/20 rounded-lg p-6">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+          <Icon name="SparklesIcon" size={24} className="text-primary-foreground" variant="solid" />
+        </div>
+        <div>
+          <h2 className="font-heading text-lg font-semibold text-foreground">
+            Evaluación de Calidad IA
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            Análisis realizado por Gemini Pro Vision
+          </p>
+        </div>
+      </div>
+
+      {/* Overall Score */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-foreground">Puntuación General</span>
+          <span className={`text-3xl font-bold ${getScoreColor(overallScore)}`}>
+            {overallScore}/100
+          </span>
+        </div>
+        <div className="w-full h-3 bg-muted rounded-full overflow-hidden">
+          <div
+            className={`h-full ${getScoreBgColor(overallScore)} transition-all duration-500`}
+            style={{ width: `${overallScore}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Detailed Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-background/50 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Icon name="EyeIcon" size={18} className="text-primary" />
+            <span className="text-sm font-medium text-foreground">Calidad Visual</span>
+          </div>
+          <p className={`text-2xl font-bold ${getScoreColor(visualQuality)}`}>
+            {visualQuality}%
+          </p>
+        </div>
+        <div className="bg-background/50 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Icon name="ClockIcon" size={18} className="text-primary" />
+            <span className="text-sm font-medium text-foreground">Madurez</span>
+          </div>
+          <p className={`text-2xl font-bold ${getScoreColor(ripeness)}`}>
+            {ripeness}%
+          </p>
+        </div>
+        <div className="bg-background/50 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Icon name="CheckCircleIcon" size={18} className="text-primary" />
+            <span className="text-sm font-medium text-foreground">Consistencia</span>
+          </div>
+          <p className={`text-2xl font-bold ${getScoreColor(consistency)}`}>
+            {consistency}%
+          </p>
+        </div>
+      </div>
+
+      {/* Analysis */}
+      <div className="mb-4">
+        <h3 className="text-sm font-semibold text-foreground mb-2">Análisis Detallado</h3>
+        <p className="text-sm text-foreground leading-relaxed">
+          {analysis}
+        </p>
+      </div>
+
+      {/* Recommendations */}
+      {recommendations.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-foreground mb-2">Recomendaciones</h3>
+          <ul className="space-y-2">
+            {recommendations.map((rec, index) => (
+              <li key={index} className="flex items-start gap-2 text-sm text-foreground">
+                <Icon name="CheckCircleIcon" size={16} className="text-accent mt-0.5 flex-shrink-0" variant="solid" />
+                <span>{rec}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default AIQualityAssessment;
+
+===FILE: src/app/offer-details/components/ImageGallery.tsx===
+'use client';
+
+import { useState } from 'react';
+import AppImage from '@/components/ui/AppImage';
+import Icon from '@/components/ui/AppIcon';
+
+interface ImageGalleryProps {
+  images: Array<{ url: string; alt: string }>;
+}
+
+const ImageGallery = ({ images }: ImageGalleryProps) => {
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [isZoomed, setIsZoomed] = useState(false);
+
+  const handlePrevious = () => {
+    setSelectedIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+  };
+
+  const handleNext = () => {
+    setSelectedIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+  };
+
+  const handleThumbnailClick = (index: number) => {
+    setSelectedIndex(index);
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Main Image Display */}
+      <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] bg-muted rounded-lg overflow-hidden">
+        <AppImage
+          src={images[selectedIndex].url}
+          alt={images[selectedIndex].alt}
+          fill
+          className={`object-cover transition-transform duration-300 ${
+            isZoomed ? 'scale-150 cursor-zoom-out' : 'cursor-zoom-in'
+          }`}
+          onClick={() => setIsZoomed(!isZoomed)}
+        />
+
+        {/* Navigation Arrows */}
+        {images.length > 1 && (
+          <>
+            <button
+              onClick={handlePrevious}
+              className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-background/80 hover:bg-background rounded-full flex items-center justify-center transition-all animation-ease-out shadow-md"
+              aria-label="Previous image"
+            >
+              <Icon name="ChevronLeftIcon" size={24} />
+            </button>
+            <button
+              onClick={handleNext}
+              className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-background/80 hover:bg-background rounded-full flex items-center justify-center transition-all animation-ease-out shadow-md"
+              aria-label="Next image"
+            >
+              <Icon name="ChevronRightIcon" size={24} />
+            </button>
+          </>
+        )}
+
+        {/* Image Counter */}
+        <div className="absolute bottom-4 right-4 px-3 py-1.5 bg-background/80 rounded-full text-sm font-medium">
+          {selectedIndex + 1} / {images.length}
+        </div>
+      </div>
+
+      {/* Thumbnail Navigation */}
+      {images.length > 1 && (
+        <div className="flex gap-3 overflow-x-auto pb-2">
+          {images.map((image, index) => (
+            <button
+              key={index}
+              onClick={() => handleThumbnailClick(index)}
+              className={`relative flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 transition-all animation-ease-out ${
+                selectedIndex === index
+                  ? 'border-primary shadow-md'
+                  : 'border-border hover:border-primary/50'
+              }`}
+            >
+              <AppImage
+                src={image.url}
+                alt={`Thumbnail ${index + 1}`}
+                fill
+                className="object-cover"
+              />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ImageGallery;
+
+===FILE: src/app/offer-details/components/OfferDetailsInteractive.tsx===
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Header from '@/components/common/Header';
+import AIAssistantToggle from '@/components/common/AIAssistantToggle';
+import OfferActionBar from '@/components/common/OfferActionBar';
+import ImageGallery from './ImageGallery';
+import OfferInformation from './OfferInformation';
+import ProducerProfile from './ProducerProfile';
+import AIQualityAssessment from './AIQualityAssessment';
+import ShippingPaymentInfo from './ShippingPaymentInfo';
+import Icon from '@/components/ui/AppIcon';
+
+interface OfferData {
+  id: string;
+  cropType: string;
+  quantity: number;
+  unit: string;
+  quality: string;
+  harvestDate: string;
+  priceVES: number;
+  priceUSD: number;
+  exchangeRate: number;
+  certifications: string[];
+  description: string;
+  images: Array<{url: string;alt: string;}>;
+  producer: {
+    name: string;
+    location: string;
+    avatar: string;
+    avatarAlt: string;
+    verified: boolean;
+    rating: number;
+    totalSales: number;
+    memberSince: string;
+    bio: string;
+    phone: string;
+  };
+  aiAssessment: {
+    overallScore: number;
+    visualQuality: number;
+    ripeness: number;
+    consistency: number;
+    analysis: string;
+    recommendations: string[];
+  };
+  shipping: {
+    methods: Array<{
+      name: string;
+      description: string;
+      estimatedDays: string;
+    }>;
+    paymentMethods: string[];
+    terms: string[];
+  };
+}
+
+const OfferDetailsInteractive = () => {
+  const router = useRouter();
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  const mockOfferData: OfferData = {
+    id: 'offer-001',
+    cropType: 'Cacao',
+    quantity: 500,
+    unit: 'kg',
+    quality: 'Premium AAA',
+    harvestDate: '15/11/2025',
+    priceVES: 180000,
+    priceUSD: 5.0,
+    exchangeRate: 36.0,
+    certifications: ['Orgánico', 'Comercio Justo', 'Sello de Calidad'],
+    description: `Cacao premium de primera calidad cultivado en las montañas de Mérida, Venezuela. Nuestro cacao es cosechado a mano y procesado con técnicas tradicionales que preservan su sabor único y aromático.\n\nCaracterísticas destacadas:\n• Fermentación controlada de 6 días\n• Secado natural al sol\n• Contenido de grasa superior al 50%\n• Perfil de sabor: notas frutales y florales\n• Sin pesticidas ni químicos\n\nIdeal para chocolatería artesanal y producción de chocolate fino.`,
+    images: [
+    {
+      url: "https://images.unsplash.com/photo-1578269830911-6159f1aee3b4",
+      alt: 'Close-up of premium Venezuelan cacao pods hanging on tree with rich brown color and natural texture'
+    },
+    {
+      url: "https://images.unsplash.com/photo-1512427631246-d0c374837803",
+      alt: 'Freshly harvested cacao beans spread on drying rack showing deep brown color and uniform size'
+    },
+    {
+      url: "https://images.unsplash.com/photo-1621555798820-2a090fe89b7f",
+      alt: 'Fermented cacao beans in wooden box displaying rich chocolate brown color and quality texture'
+    },
+    {
+      url: "https://images.unsplash.com/photo-1446435383876-ff7172903e86",
+      alt: 'Cacao plantation in Venezuelan mountains with lush green trees and ripe brown pods'
+    }],
+
+    producer: {
+      name: 'Carlos Rodríguez',
+      location: 'Mérida, Venezuela',
+      avatar: "https://img.rocket.new/generatedImages/rocket_gen_img_114713e0c-1763295039795.png",
+      avatarAlt: 'Professional headshot of Hispanic man with short dark hair and friendly smile wearing blue shirt',
+      verified: true,
+      rating: 4.8,
+      totalSales: 127,
+      memberSince: 'Enero 2023',
+      bio: 'Agricultor de tercera generación especializado en cacao fino de aroma. Mi familia ha cultivado cacao en las montañas de Mérida durante más de 50 años, manteniendo prácticas sostenibles y de comercio justo.',
+      phone: '584121234567'
+    },
+    aiAssessment: {
+      overallScore: 92,
+      visualQuality: 95,
+      ripeness: 90,
+      consistency: 91,
+      analysis: 'El análisis visual mediante IA indica que este lote de cacao presenta características excepcionales. Los granos muestran una fermentación uniforme con coloración marrón chocolate consistente. La textura superficial sugiere un proceso de secado óptimo. No se detectan signos de moho, plagas o defectos significativos. El tamaño de los granos es uniforme, indicando una selección cuidadosa.',
+      recommendations: [
+      'Almacenar en ambiente seco con humedad relativa inferior al 7%',
+      'Mantener temperatura entre 18-20°C para preservar calidad',
+      'Procesar dentro de 6 meses para sabor óptimo',
+      'Ideal para chocolate de origen único premium']
+
+    },
+    shipping: {
+      methods: [
+      {
+        name: 'Envío Nacional Estándar',
+        description: 'Transporte terrestre seguro a cualquier ciudad de Venezuela',
+        estimatedDays: '5-7 días hábiles'
+      },
+      {
+        name: 'Envío Internacional',
+        description: 'Exportación con documentación completa y certificados',
+        estimatedDays: '15-20 días hábiles'
+      },
+      {
+        name: 'Retiro en Finca',
+        description: 'Coordinar visita y retiro directo en la plantación',
+        estimatedDays: 'Inmediato'
+      }],
+
+      paymentMethods: ['Transferencia Bancaria', 'PayPal', 'Zelle', 'Criptomonedas', 'Efectivo (retiro en finca)'],
+      terms: [
+      'Pago 50% adelanto, 50% contra entrega',
+      'Garantía de calidad: devolución si no cumple especificaciones',
+      'Muestras disponibles previo a compra mayor (costo de envío a cargo del comprador)',
+      'Certificados de origen y calidad incluidos',
+      'Factura fiscal disponible',
+      'Descuentos por volumen: 5% en pedidos &gt; 1000kg, 10% en pedidos &gt; 2000kg']
+
+    }
+  };
+
+  const handleFavoriteToggle = (favorite: boolean) => {
+    setIsFavorite(favorite);
+  };
+
+  const handleBackToMarketplace = () => {
+    router.push('/buyer-marketplace-feed');
+  };
+
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header userRole="buyer" />
+        <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+        </div>
+      </div>);
+
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header userRole="buyer" />
+      
+      <OfferActionBar
+        offerId={mockOfferData.id}
+        producerPhone={mockOfferData.producer.phone}
+        producerName={mockOfferData.producer.name}
+        offerTitle={`${mockOfferData.cropType} Premium - ${mockOfferData.quantity}${mockOfferData.unit}`}
+        isFavorite={isFavorite}
+        onFavoriteToggle={handleFavoriteToggle} />
+
+
+      <main className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8">
+        {/* Back Button */}
+        <button
+          onClick={handleBackToMarketplace}
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6">
+
+          <Icon name="ArrowLeftIcon" size={20} />
+          <span className="text-sm font-medium">Volver al Mercado</span>
+        </button>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Images & Main Info */}
+          <div className="lg:col-span-2 space-y-8">
+            <ImageGallery images={mockOfferData.images} />
+            <OfferInformation
+              cropType={mockOfferData.cropType}
+              quantity={mockOfferData.quantity}
+              unit={mockOfferData.unit}
+              quality={mockOfferData.quality}
+              harvestDate={mockOfferData.harvestDate}
+              priceVES={mockOfferData.priceVES}
+              priceUSD={mockOfferData.priceUSD}
+              exchangeRate={mockOfferData.exchangeRate}
+              certifications={mockOfferData.certifications}
+              description={mockOfferData.description} />
+
+            <AIQualityAssessment
+              overallScore={mockOfferData.aiAssessment.overallScore}
+              visualQuality={mockOfferData.aiAssessment.visualQuality}
+              ripeness={mockOfferData.aiAssessment.ripeness}
+              consistency={mockOfferData.aiAssessment.consistency}
+              analysis={mockOfferData.aiAssessment.analysis}
+              recommendations={mockOfferData.aiAssessment.recommendations} />
+
+          </div>
+
+          {/* Right Column - Producer & Shipping */}
+          <div className="space-y-6">
+            <ProducerProfile
+              name={mockOfferData.producer.name}
+              location={mockOfferData.producer.location}
+              avatar={mockOfferData.producer.avatar}
+              avatarAlt={mockOfferData.producer.avatarAlt}
+              verified={mockOfferData.producer.verified}
+              rating={mockOfferData.producer.rating}
+              totalSales={mockOfferData.producer.totalSales}
+              memberSince={mockOfferData.producer.memberSince}
+              bio={mockOfferData.producer.bio} />
+
+            <ShippingPaymentInfo
+              shippingMethods={mockOfferData.shipping.methods}
+              paymentMethods={mockOfferData.shipping.paymentMethods}
+              terms={mockOfferData.shipping.terms} />
+
+          </div>
+        </div>
+      </main>
+
+      <AIAssistantToggle />
+    </div>);
+
+};
+
+export default OfferDetailsInteractive;
+
+===FILE: src/app/offer-details/components/OfferInformation.tsx===
+import Icon from '@/components/ui/AppIcon';
+
+interface OfferInformationProps {
+  cropType: string;
+  quantity: number;
+  unit: string;
+  quality: string;
+  harvestDate: string;
+  priceVES: number;
+  priceUSD: number;
+  exchangeRate: number;
+  certifications: string[];
+  description: string;
+}
+
+const OfferInformation = ({
+  cropType,
+  quantity,
+  unit,
+  quality,
+  harvestDate,
+  priceVES,
+  priceUSD,
+  exchangeRate,
+  certifications,
+  description
+}: OfferInformationProps) => {
+  const cropIcons: Record<string, string> = {
+    'Cacao': 'CubeIcon',
+    'Café': 'BeakerIcon',
+    'Plátano': 'SparklesIcon'
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-start gap-4">
+        <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+          <Icon name={cropIcons[cropType] as any || 'CubeIcon'} size={24} className="text-primary" />
+        </div>
+        <div className="flex-1">
+          <h1 className="font-heading text-2xl md:text-3xl font-bold text-foreground mb-2">
+            {cropType} Premium
+          </h1>
+          <div className="flex flex-wrap gap-2">
+            {certifications.map((cert, index) => (
+              <span
+                key={index}
+                className="px-3 py-1 bg-accent/10 text-accent text-xs font-medium rounded-full"
+              >
+                {cert}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Pricing */}
+      <div className="bg-card border border-border rounded-lg p-6">
+        <h2 className="font-heading text-lg font-semibold text-foreground mb-4">
+          Precio
+        </h2>
+        <div className="space-y-3">
+          <div className="flex items-baseline gap-3">
+            <span className="text-3xl font-bold text-primary">
+              ${priceUSD.toLocaleString('es-VE', { minimumFractionDigits: 2 })}
+            </span>
+            <span className="text-sm text-muted-foreground">USD / {unit}</span>
+          </div>
+          <div className="flex items-baseline gap-3">
+            <span className="text-xl font-semibold text-foreground">
+              Bs. {priceVES.toLocaleString('es-VE', { minimumFractionDigits: 2 })}
+            </span>
+            <span className="text-sm text-muted-foreground">VES / {unit}</span>
+          </div>
+          <div className="pt-2 border-t border-border">
+            <p className="text-xs text-muted-foreground">
+              Tasa de cambio: 1 USD = Bs. {exchangeRate.toLocaleString('es-VE')}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Specifications */}
+      <div className="bg-card border border-border rounded-lg p-6">
+        <h2 className="font-heading text-lg font-semibold text-foreground mb-4">
+          Especificaciones
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex items-start gap-3">
+            <Icon name="ScaleIcon" size={20} className="text-primary mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-foreground">Cantidad Disponible</p>
+              <p className="text-base font-semibold text-foreground">
+                {quantity.toLocaleString('es-VE')} {unit}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <Icon name="StarIcon" size={20} className="text-primary mt-0.5" variant="solid" />
+            <div>
+              <p className="text-sm font-medium text-foreground">Calidad</p>
+              <p className="text-base font-semibold text-foreground">{quality}</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <Icon name="CalendarIcon" size={20} className="text-primary mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-foreground">Fecha de Cosecha</p>
+              <p className="text-base font-semibold text-foreground">{harvestDate}</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <Icon name="TruckIcon" size={20} className="text-primary mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-foreground">Disponibilidad</p>
+              <p className="text-base font-semibold text-accent">Inmediata</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Description */}
+      <div className="bg-card border border-border rounded-lg p-6">
+        <h2 className="font-heading text-lg font-semibold text-foreground mb-3">
+          Descripción
+        </h2>
+        <p className="text-foreground leading-relaxed whitespace-pre-line">
+          {description}
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default OfferInformation;
+
+===FILE: src/app/offer-details/components/ProducerProfile.tsx===
+import AppImage from '@/components/ui/AppImage';
+import Icon from '@/components/ui/AppIcon';
+
+interface ProducerProfileProps {
+  name: string;
+  location: string;
+  avatar: string;
+  avatarAlt: string;
+  verified: boolean;
+  rating: number;
+  totalSales: number;
+  memberSince: string;
+  bio: string;
+}
+
+const ProducerProfile = ({
+  name,
+  location,
+  avatar,
+  avatarAlt,
+  verified,
+  rating,
+  totalSales,
+  memberSince,
+  bio
+}: ProducerProfileProps) => {
+  return (
+    <div className="bg-card border border-border rounded-lg p-6">
+      <h2 className="font-heading text-lg font-semibold text-foreground mb-4">
+        Información del Productor
+      </h2>
+
+      <div className="flex items-start gap-4 mb-4">
+        <div className="relative w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
+          <AppImage
+            src={avatar}
+            alt={avatarAlt}
+            fill
+            className="object-cover"
+          />
+          {verified && (
+            <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-accent rounded-full border-2 border-background flex items-center justify-center">
+              <Icon name="CheckBadgeIcon" size={16} className="text-accent-foreground" variant="solid" />
+            </div>
+          )}
+        </div>
+
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="font-heading text-xl font-semibold text-foreground">
+              {name}
+            </h3>
+            {verified && (
+              <span className="px-2 py-0.5 bg-accent/10 text-accent text-xs font-medium rounded">
+                Verificado
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+            <Icon name="MapPinIcon" size={16} />
+            <span>{location}</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1">
+              <Icon name="StarIcon" size={16} className="text-primary" variant="solid" />
+              <span className="text-sm font-semibold text-foreground">{rating.toFixed(1)}</span>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {totalSales} ventas
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-3 pt-4 border-t border-border">
+        <p className="text-sm text-foreground leading-relaxed">
+          {bio}
+        </p>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Icon name="CalendarIcon" size={14} />
+          <span>Miembro desde {memberSince}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ProducerProfile;
+
+===FILE: src/app/offer-details/components/ShippingPaymentInfo.tsx===
+import Icon from '@/components/ui/AppIcon';
+
+interface ShippingPaymentInfoProps {
+  shippingMethods: Array<{
+    name: string;
+    description: string;
+    estimatedDays: string;
+  }>;
+  paymentMethods: string[];
+  terms: string[];
+}
+
+const ShippingPaymentInfo = ({
+  shippingMethods,
+  paymentMethods,
+  terms
+}: ShippingPaymentInfoProps) => {
+  return (
+    <div className="space-y-6">
+      {/* Shipping Information */}
+      <div className="bg-card border border-border rounded-lg p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Icon name="TruckIcon" size={20} className="text-primary" />
+          <h2 className="font-heading text-lg font-semibold text-foreground">
+            Información de Envío
+          </h2>
+        </div>
+        <div className="space-y-3">
+          {shippingMethods.map((method, index) => (
+            <div key={index} className="flex items-start gap-3 p-3 bg-muted/50 rounded-md">
+              <Icon name="CheckCircleIcon" size={18} className="text-accent mt-0.5" variant="solid" />
+              <div className="flex-1">
+                <p className="font-medium text-foreground">{method.name}</p>
+                <p className="text-sm text-muted-foreground">{method.description}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Tiempo estimado: {method.estimatedDays}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Payment Methods */}
+      <div className="bg-card border border-border rounded-lg p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Icon name="CreditCardIcon" size={20} className="text-primary" />
+          <h2 className="font-heading text-lg font-semibold text-foreground">
+            Métodos de Pago
+          </h2>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {paymentMethods.map((method, index) => (
+            <span
+              key={index}
+              className="px-4 py-2 bg-muted text-foreground text-sm font-medium rounded-md"
+            >
+              {method}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Terms & Conditions */}
+      <div className="bg-card border border-border rounded-lg p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Icon name="DocumentTextIcon" size={20} className="text-primary" />
+          <h2 className="font-heading text-lg font-semibold text-foreground">
+            Términos y Condiciones
+          </h2>
+        </div>
+        <ul className="space-y-2">
+          {terms.map((term, index) => (
+            <li key={index} className="flex items-start gap-2 text-sm text-foreground">
+              <Icon name="CheckIcon" size={16} className="text-primary mt-0.5 flex-shrink-0" />
+              <span>{term}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+};
+
+export default ShippingPaymentInfo;
+
+===FILE: src/app/offer-details/page.tsx===
+import type { Metadata } from 'next';
+import OfferDetailsInteractive from './components/OfferDetailsInteractive';
+
+export const metadata: Metadata = {
+  title: 'Detalles de Oferta - ZUMA Marketplace',
+  description: 'Información completa del producto agrícola incluyendo especificaciones, precios, evaluación de calidad IA, y datos del productor para facilitar la compra directa.',
+};
+
+export default function OfferDetailsPage() {
+  return <OfferDetailsInteractive />;
+}
+
+===FILE: src/app/producer-dashboard/components/DashboardMetrics.tsx===
+import Icon from '@/components/ui/AppIcon';
+
+interface MetricCardProps {
+  icon: string;
+  label: string;
+  value: string;
+  subValue?: string;
+  trend?: 'up' | 'down' | 'neutral';
+  trendValue?: string;
+}
+
+const MetricCard = ({ icon, label, value, subValue, trend, trendValue }: MetricCardProps) => {
+  const trendColors = {
+    up: 'text-success',
+    down: 'text-error',
+    neutral: 'text-muted-foreground'
+  };
+
+  return (
+    <div className="bg-card border border-border rounded-lg p-6 shadow-sm hover:shadow-md transition-all animation-ease-out">
+      <div className="flex items-start justify-between mb-4">
+        <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+          <Icon name={icon as any} size={24} className="text-primary" />
+        </div>
+        {trend && trendValue && (
+          <div className={`flex items-center gap-1 ${trendColors[trend]}`}>
+            <Icon 
+              name={trend === 'up' ? 'ArrowTrendingUpIcon' : trend === 'down' ? 'ArrowTrendingDownIcon' : 'MinusIcon'} 
+              size={16} 
+            />
+            <span className="text-sm font-medium">{trendValue}</span>
+          </div>
+        )}
+      </div>
+      <div>
+        <p className="text-sm text-muted-foreground mb-1">{label}</p>
+        <p className="text-2xl font-heading font-bold text-foreground">{value}</p>
+        {subValue && (
+          <p className="text-xs text-muted-foreground mt-1">{subValue}</p>
+        )}
+      </div>
+    </div>
+  );
+};
+
+interface DashboardMetricsProps {
+  metrics: {
+    activeOffers: number;
+    totalViews: number;
+    earningsVES: number;
+    earningsUSD: number;
+  };
+}
+
+const DashboardMetrics = ({ metrics }: DashboardMetricsProps) => {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <MetricCard
+        icon="DocumentTextIcon"
+        label="Ofertas Activas"
+        value={metrics.activeOffers.toString()}
+        trend="up"
+        trendValue="+2"
+      />
+      <MetricCard
+        icon="EyeIcon"
+        label="Vistas Totales"
+        value={metrics.totalViews.toLocaleString('es-VE')}
+        trend="up"
+        trendValue="+15%"
+      />
+      <MetricCard
+        icon="BanknotesIcon"
+        label="Ganancias (VES)"
+        value={`Bs. ${metrics.earningsVES.toLocaleString('es-VE')}`}
+        subValue={`≈ $${metrics.earningsUSD.toFixed(2)} USD`}
+        trend="up"
+        trendValue="+8%"
+      />
+      <MetricCard
+        icon="ChartBarIcon"
+        label="Tasa de Conversión"
+        value="24%"
+        trend="neutral"
+        trendValue="0%"
+      />
+    </div>
+  );
+};
+
+export default DashboardMetrics;
+
+===FILE: src/app/producer-dashboard/components/EmptyState.tsx===
+import Icon from '@/components/ui/AppIcon';
+import Link from 'next/link';
+
+interface EmptyStateProps {
+  type: 'active' | 'sold' | 'filtered';
+}
+
+const EmptyState = ({ type }: EmptyStateProps) => {
+  const content = {
+    active: {
+      icon: 'DocumentPlusIcon',
+      title: 'No tienes ofertas activas',
+      description: 'Comienza a vender tus productos creando tu primera oferta en el marketplace.',
+      actionLabel: 'Crear Primera Oferta',
+      actionLink: '/producer-offer-creation'
+    },
+    sold: {
+      icon: 'CheckBadgeIcon',
+      title: 'Aún no has vendido ningún producto',
+      description: 'Tus ofertas vendidas aparecerán aquí. Sigue promocionando tus productos para conseguir compradores.',
+      actionLabel: 'Ver Ofertas Activas',
+      actionLink: '#active'
+    },
+    filtered: {
+      icon: 'FunnelIcon',
+      title: 'No se encontraron ofertas',
+      description: 'No hay ofertas que coincidan con los filtros seleccionados. Intenta ajustar tus criterios de búsqueda.',
+      actionLabel: 'Limpiar Filtros',
+      actionLink: '#'
+    }
+  };
+
+  const config = content[type];
+
+  return (
+    <div className="flex flex-col items-center justify-center py-16 px-4">
+      <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-6">
+        <Icon name={config.icon as any} size={40} className="text-muted-foreground" />
+      </div>
+      <h3 className="font-heading text-xl font-semibold text-foreground mb-2 text-center">
+        {config.title}
+      </h3>
+      <p className="text-muted-foreground text-center max-w-md mb-6">
+        {config.description}
+      </p>
+      {type === 'active' ? (
+        <Link
+          href={config.actionLink}
+          className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-all animation-ease-out font-medium"
+        >
+          <Icon name="PlusCircleIcon" size={20} variant="solid" />
+          {config.actionLabel}
+        </Link>
+      ) : (
+        <button
+          onClick={() => window.location.reload()}
+          className="flex items-center gap-2 px-6 py-3 border border-border rounded-md hover:bg-muted transition-all animation-ease-out font-medium"
+        >
+          {config.actionLabel}
+        </button>
+      )}
+    </div>
+  );
+};
+
+export default EmptyState;
+
+===FILE: src/app/producer-dashboard/components/FilterControls.tsx===
+'use client';
+
+import { useState } from 'react';
+import Icon from '@/components/ui/AppIcon';
+
+interface FilterControlsProps {
+  onFilterChange: (filters: FilterState) => void;
+  onSortChange: (sort: SortOption) => void;
+}
+
+interface FilterState {
+  cropType: string[];
+  status: string[];
+}
+
+type SortOption = 'newest' | 'oldest' | 'views' | 'price';
+
+const FilterControls = ({ onFilterChange, onSortChange }: FilterControlsProps) => {
+  const [filters, setFilters] = useState<FilterState>({
+    cropType: [],
+    status: []
+  });
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
+  const [showFilters, setShowFilters] = useState(false);
+
+  const cropTypes = [
+    { value: 'cacao', label: 'Cacao', icon: 'CubeIcon' },
+    { value: 'cafe', label: 'Café', icon: 'BeakerIcon' },
+    { value: 'platano', label: 'Plátano', icon: 'SparklesIcon' }
+  ];
+
+  const statuses = [
+    { value: 'active', label: 'Activas', color: 'text-success' },
+    { value: 'sold', label: 'Vendidas', color: 'text-primary' },
+    { value: 'expired', label: 'Expiradas', color: 'text-muted-foreground' }
+  ];
+
+  const sortOptions = [
+    { value: 'newest' as SortOption, label: 'Más recientes', icon: 'ClockIcon' },
+    { value: 'oldest' as SortOption, label: 'Más antiguas', icon: 'ClockIcon' },
+    { value: 'views' as SortOption, label: 'Más vistas', icon: 'EyeIcon' },
+    { value: 'price' as SortOption, label: 'Mayor precio', icon: 'BanknotesIcon' }
+  ];
+
+  const handleCropToggle = (value: string) => {
+    const newCropTypes = filters.cropType.includes(value)
+      ? filters.cropType.filter(t => t !== value)
+      : [...filters.cropType, value];
+    
+    const newFilters = { ...filters, cropType: newCropTypes };
+    setFilters(newFilters);
+    onFilterChange(newFilters);
+  };
+
+  const handleStatusToggle = (value: string) => {
+    const newStatuses = filters.status.includes(value)
+      ? filters.status.filter(s => s !== value)
+      : [...filters.status, value];
+    
+    const newFilters = { ...filters, status: newStatuses };
+    setFilters(newFilters);
+    onFilterChange(newFilters);
+  };
+
+  const handleSortChange = (value: SortOption) => {
+    setSortBy(value);
+    onSortChange(value);
+  };
+
+  const handleReset = () => {
+    const resetFilters: FilterState = {
+      cropType: [],
+      status: []
+    };
+    setFilters(resetFilters);
+    setSortBy('newest');
+    onFilterChange(resetFilters);
+    onSortChange('newest');
+  };
+
+  const activeFilterCount = filters.cropType.length + filters.status.length;
+
+  return (
+    <div className="mb-6">
+      {/* Mobile Filter Toggle */}
+      <div className="flex items-center gap-3 mb-4 lg:hidden">
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="flex items-center gap-2 px-4 py-2 border border-border rounded-md hover:bg-muted transition-all animation-ease-out"
+        >
+          <Icon name="FunnelIcon" size={20} />
+          <span className="text-sm font-medium">Filtros</span>
+          {activeFilterCount > 0 && (
+            <span className="px-2 py-0.5 bg-primary text-primary-foreground text-xs font-medium rounded-full">
+              {activeFilterCount}
+            </span>
+          )}
+        </button>
+        {activeFilterCount > 0 && (
+          <button
+            onClick={handleReset}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Limpiar
+          </button>
+        )}
+      </div>
+
+      {/* Desktop Filters - Always Visible */}
+      <div className={`${showFilters ? 'block' : 'hidden'} lg:block space-y-4`}>
+        {/* Crop Type Filter */}
+        <div>
+          <h3 className="text-sm font-semibold text-foreground mb-3">Tipo de Cultivo</h3>
+          <div className="flex flex-wrap gap-2">
+            {cropTypes.map(crop => (
+              <button
+                key={crop.value}
+                onClick={() => handleCropToggle(crop.value)}
+                className={`
+                  flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium
+                  transition-all animation-ease-out
+                  ${filters.cropType.includes(crop.value)
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }
+                `}
+              >
+                <Icon name={crop.icon as any} size={16} />
+                {crop.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Status Filter */}
+        <div>
+          <h3 className="text-sm font-semibold text-foreground mb-3">Estado</h3>
+          <div className="flex flex-wrap gap-2">
+            {statuses.map(status => (
+              <button
+                key={status.value}
+                onClick={() => handleStatusToggle(status.value)}
+                className={`
+                  px-4 py-2 rounded-md text-sm font-medium
+                  transition-all animation-ease-out
+                  ${filters.status.includes(status.value)
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }
+                `}
+              >
+                {status.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Sort Options */}
+        <div>
+          <h3 className="text-sm font-semibold text-foreground mb-3">Ordenar por</h3>
+          <div className="flex flex-wrap gap-2">
+            {sortOptions.map(option => (
+              <button
+                key={option.value}
+                onClick={() => handleSortChange(option.value)}
+                className={`
+                  flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium
+                  transition-all animation-ease-out
+                  ${sortBy === option.value
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }
+                `}
+              >
+                <Icon name={option.icon as any} size={16} />
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default FilterControls;
+
+===FILE: src/app/producer-dashboard/components/OfferCard.tsx===
+import AppImage from '@/components/ui/AppImage';
+import Icon from '@/components/ui/AppIcon';
+
+interface Offer {
+  id: string;
+  cropType: 'cacao' | 'cafe' | 'platano';
+  title: string;
+  quantity: number;
+  unit: string;
+  priceVES: number;
+  priceUSD: number;
+  quality: string;
+  images: Array<{ url: string; alt: string }>;
+  status: 'active' | 'sold' | 'expired';
+  views: number;
+  interested: number;
+  createdAt: string;
+  expiresAt?: string;
+  soldAt?: string;
+  buyerContact?: string;
+}
+
+interface OfferCardProps {
+  offer: Offer;
+  onEdit: (offerId: string) => void;
+  onShare: (offerId: string) => void;
+  onDelete: (offerId: string) => void;
+}
+
+const OfferCard = ({ offer, onEdit, onShare, onDelete }: OfferCardProps) => {
+  const cropIcons = {
+    cacao: 'CubeIcon',
+    cafe: 'BeakerIcon',
+    platano: 'SparklesIcon'
+  };
+
+  const statusConfig = {
+    active: {
+      label: 'Activa',
+      color: 'bg-success text-success-foreground',
+      icon: 'CheckCircleIcon'
+    },
+    sold: {
+      label: 'Vendida',
+      color: 'bg-primary text-primary-foreground',
+      icon: 'CheckBadgeIcon'
+    },
+    expired: {
+      label: 'Expirada',
+      color: 'bg-muted text-muted-foreground',
+      icon: 'ClockIcon'
+    }
+  };
+
+  const isExpiringSoon = offer.expiresAt && 
+    new Date(offer.expiresAt).getTime() - Date.now() < 3 * 24 * 60 * 60 * 1000;
+
+  return (
+    <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all animation-ease-out">
+      {/* Image Section */}
+      <div className="relative h-48 overflow-hidden bg-muted">
+        <AppImage
+          src={offer.images[0]?.url || '/assets/images/no_image.png'}
+          alt={offer.images[0]?.alt || 'Imagen del producto'}
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute top-3 left-3 flex items-center gap-2">
+          <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusConfig[offer.status].color} flex items-center gap-1`}>
+            <Icon name={statusConfig[offer.status].icon as any} size={14} variant="solid" />
+            {statusConfig[offer.status].label}
+          </span>
+          {isExpiringSoon && offer.status === 'active' && (
+            <span className="px-3 py-1 rounded-full text-xs font-medium bg-warning text-warning-foreground flex items-center gap-1">
+              <Icon name="ExclamationTriangleIcon" size={14} variant="solid" />
+              Expira pronto
+            </span>
+          )}
+        </div>
+        <div className="absolute top-3 right-3 w-10 h-10 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center">
+          <Icon name={cropIcons[offer.cropType] as any} size={20} className="text-primary" />
+        </div>
+      </div>
+
+      {/* Content Section */}
+      <div className="p-4">
+        <h3 className="font-heading text-lg font-semibold text-foreground mb-2 line-clamp-1">
+          {offer.title}
+        </h3>
+        
+        <div className="flex items-center gap-4 mb-3 text-sm text-muted-foreground">
+          <div className="flex items-center gap-1">
+            <Icon name="ScaleIcon" size={16} />
+            <span>{offer.quantity} {offer.unit}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Icon name="StarIcon" size={16} variant="solid" className="text-primary" />
+            <span>{offer.quality}</span>
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-heading font-bold text-foreground">
+              Bs. {offer.priceVES.toLocaleString('es-VE')}
+            </span>
+            <span className="text-sm text-muted-foreground">
+              / ${offer.priceUSD.toFixed(2)} USD
+            </span>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="flex items-center gap-4 mb-4 pb-4 border-b border-border">
+          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+            <Icon name="EyeIcon" size={16} />
+            <span>{offer.views} vistas</span>
+          </div>
+          {offer.status === 'active' && offer.interested > 0 && (
+            <div className="flex items-center gap-1 text-sm text-accent">
+              <Icon name="UserGroupIcon" size={16} />
+              <span>{offer.interested} interesados</span>
+            </div>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-2">
+          {offer.status === 'active' && (
+            <>
+              <button
+                onClick={() => onEdit(offer.id)}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-all animation-ease-out text-sm font-medium"
+              >
+                <Icon name="PencilIcon" size={16} />
+                <span>Editar</span>
+              </button>
+              <button
+                onClick={() => onShare(offer.id)}
+                className="px-4 py-2 border border-border rounded-md hover:bg-muted transition-all animation-ease-out"
+                aria-label="Compartir oferta"
+              >
+                <Icon name="ShareIcon" size={18} />
+              </button>
+              <button
+                onClick={() => onDelete(offer.id)}
+                className="px-4 py-2 border border-border rounded-md hover:bg-error/10 hover:border-error transition-all animation-ease-out"
+                aria-label="Eliminar oferta"
+              >
+                <Icon name="TrashIcon" size={18} className="text-error" />
+              </button>
+            </>
+          )}
+          {offer.status === 'sold' && offer.buyerContact && (
+            <button
+              onClick={() => window.open(`https://wa.me/${offer.buyerContact}`, '_blank')}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-accent text-accent-foreground rounded-md hover:bg-accent/90 transition-all animation-ease-out text-sm font-medium"
+            >
+              <Icon name="ChatBubbleLeftRightIcon" size={16} variant="solid" />
+              <span>Contactar Comprador</span>
+            </button>
+          )}
+        </div>
+
+        {/* Date Info */}
+        <div className="mt-3 text-xs text-muted-foreground">
+          {offer.status === 'sold' && offer.soldAt && (
+            <span>Vendida el {new Date(offer.soldAt).toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+          )}
+          {offer.status === 'active' && offer.expiresAt && (
+            <span>Expira el {new Date(offer.expiresAt).toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+          )}
+          {offer.status === 'expired' && (
+            <span>Creada el {new Date(offer.createdAt).toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default OfferCard;
+
+===FILE: src/app/producer-dashboard/components/ProducerDashboardInteractive.tsx===
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Icon from '@/components/ui/AppIcon';
+import DashboardMetrics from './DashboardMetrics';
+import OfferCard from './OfferCard';
+import FilterControls from './FilterControls';
+import EmptyState from './EmptyState';
+
+interface Offer {
+  id: string;
+  cropType: 'cacao' | 'cafe' | 'platano';
+  title: string;
+  quantity: number;
+  unit: string;
+  priceVES: number;
+  priceUSD: number;
+  quality: string;
+  images: Array<{url: string;alt: string;}>;
+  status: 'active' | 'sold' | 'expired';
+  views: number;
+  interested: number;
+  createdAt: string;
+  expiresAt?: string;
+  soldAt?: string;
+  buyerContact?: string;
+}
+
+interface FilterState {
+  cropType: string[];
+  status: string[];
+}
+
+type SortOption = 'newest' | 'oldest' | 'views' | 'price';
+
+const ProducerDashboardInteractive = () => {
+  const router = useRouter();
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [activeTab, setActiveTab] = useState<'active' | 'sold'>('active');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [filters, setFilters] = useState<FilterState>({
+    cropType: [],
+    status: []
+  });
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  const mockOffers: Offer[] = [
+  {
+    id: '1',
+    cropType: 'cacao',
+    title: 'Cacao Criollo Premium - Cosecha 2025',
+    quantity: 500,
+    unit: 'kg',
+    priceVES: 2500000,
+    priceUSD: 68.50,
+    quality: 'Premium',
+    images: [
+    {
+      url: "https://images.unsplash.com/photo-1502535780602-aedae01fa80a",
+      alt: 'Granos de cacao criollo venezolano secándose al sol sobre superficie de madera'
+    }],
+
+    status: 'active',
+    views: 234,
+    interested: 8,
+    createdAt: '2025-01-15T10:00:00Z',
+    expiresAt: '2025-02-15T10:00:00Z'
+  },
+  {
+    id: '2',
+    cropType: 'cafe',
+    title: 'Café Arábica Altura - Región Andina',
+    quantity: 300,
+    unit: 'kg',
+    priceVES: 1800000,
+    priceUSD: 49.30,
+    quality: 'Especial',
+    images: [
+    {
+      url: "https://images.unsplash.com/photo-1730253206822-f0fef02d35df",
+      alt: 'Granos de café arábica verde recién cosechados en canasta de mimbre'
+    }],
+
+    status: 'active',
+    views: 189,
+    interested: 5,
+    createdAt: '2025-01-18T14:30:00Z',
+    expiresAt: '2025-02-18T14:30:00Z'
+  },
+  {
+    id: '3',
+    cropType: 'platano',
+    title: 'Plátano Hartón - Calidad Exportación',
+    quantity: 1000,
+    unit: 'kg',
+    priceVES: 800000,
+    priceUSD: 21.90,
+    quality: 'Primera',
+    images: [
+    {
+      url: "https://images.unsplash.com/photo-1631194079401-a7390b5eafba",
+      alt: 'Racimo de plátanos hartón verdes colgando en plantación tropical'
+    }],
+
+    status: 'active',
+    views: 156,
+    interested: 12,
+    createdAt: '2025-01-20T09:15:00Z',
+    expiresAt: '2025-01-28T09:15:00Z'
+  },
+  {
+    id: '4',
+    cropType: 'cacao',
+    title: 'Cacao Trinitario Orgánico Certificado',
+    quantity: 250,
+    unit: 'kg',
+    priceVES: 1500000,
+    priceUSD: 41.10,
+    quality: 'Orgánico',
+    images: [
+    {
+      url: "https://images.unsplash.com/photo-1720123040169-b5315cd59adb",
+      alt: 'Mazorca de cacao abierta mostrando granos frescos color púrpura en mano de agricultor'
+    }],
+
+    status: 'sold',
+    views: 312,
+    interested: 0,
+    createdAt: '2024-12-10T11:00:00Z',
+    soldAt: '2025-01-05T16:45:00Z',
+    buyerContact: '584121234567'
+  },
+  {
+    id: '5',
+    cropType: 'cafe',
+    title: 'Café Robusta - Producción Sostenible',
+    quantity: 400,
+    unit: 'kg',
+    priceVES: 1200000,
+    priceUSD: 32.90,
+    quality: 'Estándar',
+    images: [
+    {
+      url: "https://images.unsplash.com/photo-1690983325192-a4c13c2e331d",
+      alt: 'Granos de café robusta tostados en saco de yute con cuchara de madera'
+    }],
+
+    status: 'sold',
+    views: 267,
+    interested: 0,
+    createdAt: '2024-12-20T08:30:00Z',
+    soldAt: '2025-01-10T12:20:00Z',
+    buyerContact: '584149876543'
+  }];
+
+
+  const metrics = {
+    activeOffers: mockOffers.filter((o) => o.status === 'active').length,
+    totalViews: mockOffers.reduce((sum, o) => sum + o.views, 0),
+    earningsVES: mockOffers.filter((o) => o.status === 'sold').reduce((sum, o) => sum + o.priceVES, 0),
+    earningsUSD: mockOffers.filter((o) => o.status === 'sold').reduce((sum, o) => sum + o.priceUSD, 0)
+  };
+
+  const filterOffers = (offers: Offer[]) => {
+    let filtered = offers;
+
+    if (filters.cropType.length > 0) {
+      filtered = filtered.filter((o) => filters.cropType.includes(o.cropType));
+    }
+
+    if (filters.status.length > 0) {
+      filtered = filtered.filter((o) => filters.status.includes(o.status));
+    }
+
+    switch (sortBy) {
+      case 'newest':
+        filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        break;
+      case 'oldest':
+        filtered.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        break;
+      case 'views':
+        filtered.sort((a, b) => b.views - a.views);
+        break;
+      case 'price':
+        filtered.sort((a, b) => b.priceUSD - a.priceUSD);
+        break;
+    }
+
+    return filtered;
+  };
+
+  const activeOffers = filterOffers(mockOffers.filter((o) => o.status === 'active'));
+  const soldOffers = filterOffers(mockOffers.filter((o) => o.status === 'sold'));
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    setIsRefreshing(false);
+  };
+
+  const handleEdit = (offerId: string) => {
+    router.push(`/producer-offer-creation?edit=${offerId}`);
+  };
+
+  const handleShare = (offerId: string) => {
+    const offer = mockOffers.find((o) => o.id === offerId);
+    if (!offer) return;
+
+    const shareText = `¡Mira mi oferta en ZUMA Marketplace!\n\n${offer.title}\n${offer.quantity} ${offer.unit} - $${offer.priceUSD} USD\n\n`;
+    const shareUrl = `${window.location.origin}/offer-details?id=${offerId}`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText + shareUrl)}`;
+
+    window.open(whatsappUrl, '_blank');
+  };
+
+  const handleDelete = (offerId: string) => {
+    if (confirm('¿Estás seguro de que deseas eliminar esta oferta?')) {
+      console.log('Deleting offer:', offerId);
+    }
+  };
+
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-pulse text-muted-foreground">Cargando panel...</div>
+      </div>);
+
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+          <div>
+            <h1 className="font-heading text-3xl font-bold text-foreground mb-2">
+              Panel de Productor
+            </h1>
+            <p className="text-muted-foreground">
+              Gestiona tus ofertas y monitorea tu desempeño en el marketplace
+            </p>
+          </div>
+          <button
+            onClick={() => router.push('/producer-offer-creation')}
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-all animation-ease-out font-medium shadow-sm hover:shadow-md">
+
+            <Icon name="PlusCircleIcon" size={20} variant="solid" />
+            <span>Crear Nueva Oferta</span>
+          </button>
+        </div>
+
+        {/* Metrics */}
+        <DashboardMetrics metrics={metrics} />
+
+        {/* Pull to Refresh Indicator */}
+        {isRefreshing &&
+        <div className="flex items-center justify-center gap-2 mb-4 text-primary">
+            <Icon name="ArrowPathIcon" size={20} className="animate-spin" />
+            <span className="text-sm font-medium">Actualizando ofertas...</span>
+          </div>
+        }
+
+        {/* Tabs */}
+        <div className="border-b border-border mb-6">
+          <div className="flex gap-1">
+            <button
+              onClick={() => setActiveTab('active')}
+              className={`
+                flex items-center gap-2 px-6 py-3 font-medium transition-all animation-ease-out
+                ${activeTab === 'active' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}
+              `
+              }>
+
+              <Icon name="DocumentTextIcon" size={20} />
+              <span>Ofertas Activas</span>
+              <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
+                {activeOffers.length}
+              </span>
+            </button>
+            <button
+              onClick={() => setActiveTab('sold')}
+              className={`
+                flex items-center gap-2 px-6 py-3 font-medium transition-all animation-ease-out
+                ${activeTab === 'sold' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}
+              `
+              }>
+
+              <Icon name="CheckBadgeIcon" size={20} />
+              <span>Vendidas</span>
+              <span className="px-2 py-0.5 bg-muted text-muted-foreground text-xs font-medium rounded-full">
+                {soldOffers.length}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* Filter Controls */}
+        <FilterControls
+          onFilterChange={setFilters}
+          onSortChange={setSortBy} />
+
+
+        {/* Offers Grid */}
+        {activeTab === 'active' &&
+        <>
+            {activeOffers.length > 0 ?
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {activeOffers.map((offer) =>
+            <OfferCard
+              key={offer.id}
+              offer={offer}
+              onEdit={handleEdit}
+              onShare={handleShare}
+              onDelete={handleDelete} />
+
+            )}
+              </div> :
+
+          <EmptyState type={filters.cropType.length > 0 || filters.status.length > 0 ? 'filtered' : 'active'} />
+          }
+          </>
+        }
+
+        {activeTab === 'sold' &&
+        <>
+            {soldOffers.length > 0 ?
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {soldOffers.map((offer) =>
+            <OfferCard
+              key={offer.id}
+              offer={offer}
+              onEdit={handleEdit}
+              onShare={handleShare}
+              onDelete={handleDelete} />
+
+            )}
+              </div> :
+
+          <EmptyState type="sold" />
+          }
+          </>
+        }
+      </div>
+    </div>);
+
+};
+
+export default ProducerDashboardInteractive;
+
+===FILE: src/app/producer-dashboard/page.tsx===
+import type { Metadata } from 'next';
+import Header from '@/components/common/Header';
+import AIAssistantToggle from '@/components/common/AIAssistantToggle';
+import ProducerDashboardInteractive from './components/ProducerDashboardInteractive';
+
+export const metadata: Metadata = {
+  title: 'Panel de Productor - ZUMA Marketplace',
+  description: 'Gestiona tus ofertas activas, monitorea ventas y visualiza el desempeño de tus productos en el marketplace agrícola ZUMA.',
+};
+
+export default function ProducerDashboardPage() {
+  return (
+    <>
+      <Header userRole="producer" />
+      <ProducerDashboardInteractive />
+      <AIAssistantToggle />
+    </>
+  );
+}
+
+===FILE: src/app/producer-offer-creation/components/CropSelectionCard.tsx===
+'use client';
+
+
+import Icon from '@/components/ui/AppIcon';
+
+interface CropOption {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+}
+
+interface CropSelectionCardProps {
+  selectedCrop: string;
+  onCropSelect: (cropId: string) => void;
+}
+
+const CropSelectionCard = ({ selectedCrop, onCropSelect }: CropSelectionCardProps) => {
+  const cropOptions: CropOption[] = [
+    { id: 'cacao', name: 'Cacao', icon: 'CubeIcon', color: 'bg-[#8B5A2B]' },
+    { id: 'cafe', name: 'Café', icon: 'BeakerIcon', color: 'bg-[#3A5F3A]' },
+    { id: 'platano', name: 'Plátano', icon: 'SparklesIcon', color: 'bg-primary' }
+  ];
+
+  return (
+    <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
+      <h2 className="font-heading text-lg font-semibold text-foreground mb-4">
+        Tipo de Cultivo
+      </h2>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {cropOptions.map((crop) => (
+          <button
+            key={crop.id}
+            onClick={() => onCropSelect(crop.id)}
+            className={`
+              relative p-6 rounded-lg border-2 transition-all animation-ease-out
+              ${selectedCrop === crop.id
+                ? 'border-primary bg-primary/10 shadow-md'
+                : 'border-border hover:border-primary/50 hover:bg-muted'
+              }
+            `}
+          >
+            <div className="flex flex-col items-center gap-3">
+              <div className={`${crop.color} p-4 rounded-full text-white`}>
+                <Icon name={crop.icon as any} size={32} variant="solid" />
+              </div>
+              <span className="font-medium text-foreground">{crop.name}</span>
+            </div>
+            {selectedCrop === crop.id && (
+              <div className="absolute top-2 right-2">
+                <Icon name="CheckCircleIcon" size={24} variant="solid" className="text-primary" />
+              </div>
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default CropSelectionCard;
+
+===FILE: src/app/producer-offer-creation/components/OfferPreviewCard.tsx===
+import AppImage from '@/components/ui/AppImage';
+import Icon from '@/components/ui/AppIcon';
+
+interface OfferPreviewCardProps {
+  cropType: string;
+  quantity: string;
+  unit: string;
+  priceUSD: string;
+  certifications: string[];
+  photos: string[];
+}
+
+const OfferPreviewCard = ({
+  cropType,
+  quantity,
+  unit,
+  priceUSD,
+  certifications,
+  photos
+}: OfferPreviewCardProps) => {
+  const cropNames: Record<string, string> = {
+    cacao: 'Cacao',
+    cafe: 'Café',
+    platano: 'Plátano'
+  };
+
+  const certLabels: Record<string, string> = {
+    organic: 'Orgánico',
+    'fair-trade': 'Comercio Justo',
+    'quality-seal': 'Sello de Calidad'
+  };
+
+  return (
+    <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm">
+      <div className="p-4 bg-muted border-b border-border">
+        <h3 className="font-heading text-sm font-semibold text-foreground flex items-center gap-2">
+          <Icon name="EyeIcon" size={18} />
+          Vista Previa de la Oferta
+        </h3>
+      </div>
+
+      <div className="p-6">
+        {/* Photo Preview */}
+        {photos.length > 0 ? (
+          <div className="mb-4 aspect-video rounded-lg overflow-hidden bg-muted">
+            <AppImage
+              src={photos[0]}
+              alt={`Vista previa de ${cropNames[cropType] || 'producto'} agrícola venezolano`}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        ) : (
+          <div className="mb-4 aspect-video rounded-lg bg-muted flex items-center justify-center">
+            <Icon name="PhotoIcon" size={48} className="text-muted-foreground" />
+          </div>
+        )}
+
+        {/* Crop Type */}
+        <div className="mb-3">
+          <span className="inline-block px-3 py-1 bg-primary/10 text-primary text-sm font-medium rounded-full">
+            {cropNames[cropType] || 'Selecciona cultivo'}
+          </span>
+        </div>
+
+        {/* Quantity & Price */}
+        <div className="flex items-baseline justify-between mb-4">
+          <div>
+            <p className="text-2xl font-bold text-foreground">
+              {quantity || '0'} {unit}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-2xl font-bold text-primary">
+              ${priceUSD || '0.00'}
+            </p>
+            <p className="text-xs text-muted-foreground">por {unit}</p>
+          </div>
+        </div>
+
+        {/* Certifications */}
+        {certifications.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {certifications.map((cert) => (
+              <span
+                key={cert}
+                className="inline-flex items-center gap-1 px-2 py-1 bg-accent/10 text-accent text-xs font-medium rounded"
+              >
+                <Icon name="CheckBadgeIcon" size={14} variant="solid" />
+                {certLabels[cert]}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default OfferPreviewCard;
+
+===FILE: src/app/producer-offer-creation/components/PhotoUploadCard.tsx===
+'use client';
+
+import { useState, useRef } from 'react';
+import Icon from '@/components/ui/AppIcon';
+import AppImage from '@/components/ui/AppImage';
+
+interface PhotoUploadCardProps {
+  photos: string[];
+  onPhotosChange: (photos: string[]) => void;
+}
+
+const PhotoUploadCard = ({ photos, onPhotosChange }: PhotoUploadCardProps) => {
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    handleFiles(files);
+  };
+
+  const handleFiles = (files: File[]) => {
+    const newPhotos = files.slice(0, 4 - photos.length).map(file => URL.createObjectURL(file));
+    onPhotosChange([...photos, ...newPhotos]);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const files = Array.from(e.dataTransfer.files);
+    handleFiles(files);
+  };
+
+  const removePhoto = (index: number) => {
+    const newPhotos = photos.filter((_, i) => i !== index);
+    onPhotosChange(newPhotos);
+  };
+
+  return (
+    <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-heading text-lg font-semibold text-foreground">
+          Fotos del Producto
+        </h2>
+        <span className="text-sm text-muted-foreground">
+          {photos.length}/4 fotos
+        </span>
+      </div>
+
+      {/* Upload Area */}
+      {photos.length < 4 && (
+        <div
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onClick={() => fileInputRef.current?.click()}
+          className={`
+            border-2 border-dashed rounded-lg p-8 mb-4 cursor-pointer
+            transition-all animation-ease-out
+            ${isDragging
+              ? 'border-primary bg-primary/10' :'border-border hover:border-primary hover:bg-muted'
+            }
+          `}
+        >
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className="p-4 bg-muted rounded-full">
+              <Icon name="PhotoIcon" size={32} className="text-muted-foreground" />
+            </div>
+            <div>
+              <p className="font-medium text-foreground mb-1">
+                Arrastra fotos aquí o haz clic para seleccionar
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Máximo 4 imágenes (JPG, PNG)
+              </p>
+            </div>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+        </div>
+      )}
+
+      {/* Photo Grid */}
+      {photos.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {photos.map((photo, index) => (
+            <div key={index} className="relative group aspect-square">
+              <AppImage
+                src={photo}
+                alt={`Foto del producto ${index + 1} mostrando cultivo agrícola venezolano`}
+                className="w-full h-full object-cover rounded-lg"
+              />
+              <button
+                onClick={() => removePhoto(index)}
+                className="absolute top-2 right-2 p-1.5 bg-error text-error-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+              >
+                <Icon name="XMarkIcon" size={16} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default PhotoUploadCard;
+
+===FILE: src/app/producer-offer-creation/components/PricingCard.tsx===
+'use client';
+
+
+import Icon from '@/components/ui/AppIcon';
+
+interface PricingCardProps {
+  priceVES: string;
+  priceUSD: string;
+  aiSuggestionVES: string;
+  aiSuggestionUSD: string;
+  isLoadingAI: boolean;
+  onPriceVESChange: (value: string) => void;
+  onPriceUSDChange: (value: string) => void;
+  onGetAIPricing: () => void;
+}
+
+const PricingCard = ({
+  priceVES,
+  priceUSD,
+  aiSuggestionVES,
+  aiSuggestionUSD,
+  isLoadingAI,
+  onPriceVESChange,
+  onPriceUSDChange,
+  onGetAIPricing
+}: PricingCardProps) => {
+  return (
+    <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
+      <h2 className="font-heading text-lg font-semibold text-foreground mb-4">
+        Precio
+      </h2>
+
+      {/* AI Pricing Button */}
+      <button
+        onClick={onGetAIPricing}
+        disabled={isLoadingAI}
+        className="w-full mb-6 px-6 py-4 bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-lg font-semibold flex items-center justify-center gap-3 hover:shadow-lg transition-all animation-ease-out disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <Icon name="SparklesIcon" size={24} variant="solid" />
+        <span>{isLoadingAI ? 'Analizando mercado...' : 'Precio Justo IA'}</span>
+      </button>
+
+      {/* AI Suggestions */}
+      {(aiSuggestionVES || aiSuggestionUSD) && (
+        <div className="mb-6 p-4 bg-accent/10 border border-accent/30 rounded-lg">
+          <div className="flex items-start gap-3 mb-3">
+            <Icon name="LightBulbIcon" size={20} className="text-accent mt-0.5" variant="solid" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-foreground mb-2">
+                Recomendación de Precio Justo
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                {aiSuggestionVES && (
+                  <div className="bg-background p-3 rounded-md">
+                    <p className="text-xs text-muted-foreground mb-1">VES</p>
+                    <p className="font-semibold text-foreground">{aiSuggestionVES}</p>
+                  </div>
+                )}
+                {aiSuggestionUSD && (
+                  <div className="bg-background p-3 rounded-md">
+                    <p className="text-xs text-muted-foreground mb-1">USD</p>
+                    <p className="font-semibold text-foreground">{aiSuggestionUSD}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Basado en análisis de mercado actual y tendencias regionales
+          </p>
+        </div>
+      )}
+
+      {/* Price Inputs */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">
+            Precio en VES
+          </label>
+          <div className="relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+              Bs.
+            </span>
+            <input
+              type="number"
+              value={priceVES}
+              onChange={(e) => onPriceVESChange(e.target.value)}
+              placeholder="0.00"
+              min="0"
+              step="0.01"
+              className="w-full pl-12 pr-4 py-3 border border-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">
+            Precio en USD
+          </label>
+          <div className="relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+              $
+            </span>
+            <input
+              type="number"
+              value={priceUSD}
+              onChange={(e) => onPriceUSDChange(e.target.value)}
+              placeholder="0.00"
+              min="0"
+              step="0.01"
+              className="w-full pl-12 pr-4 py-3 border border-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Exchange Rate Info */}
+      <div className="mt-4 p-3 bg-muted rounded-md flex items-center gap-2">
+        <Icon name="InformationCircleIcon" size={16} className="text-muted-foreground" />
+        <p className="text-xs text-muted-foreground">
+          Tasa de cambio actual: 1 USD = 36,50 VES
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default PricingCard;
+
+===FILE: src/app/producer-offer-creation/components/ProducerOfferCreationInteractive.tsx===
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Icon from '@/components/ui/AppIcon';
+import CropSelectionCard from './CropSelectionCard';
+import QuantityQualityCard from './QuantityQualityCard';
+import PhotoUploadCard from './PhotoUploadCard';
+import PricingCard from './PricingCard';
+import OfferPreviewCard from './OfferPreviewCard';
+
+interface FormData {
+  cropType: string;
+  quantity: string;
+  unit: string;
+  certifications: string[];
+  photos: string[];
+  priceVES: string;
+  priceUSD: string;
+}
+
+interface FormErrors {
+  cropType?: string;
+  quantity?: string;
+  photos?: string;
+  priceUSD?: string;
+}
+
+const ProducerOfferCreationInteractive = () => {
+  const router = useRouter();
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [formData, setFormData] = useState<FormData>({
+    cropType: '',
+    quantity: '',
+    unit: 'kg',
+    certifications: [],
+    photos: [],
+    priceVES: '',
+    priceUSD: ''
+  });
+  const [aiSuggestion, setAiSuggestion] = useState({ ves: '', usd: '' });
+  const [isLoadingAI, setIsLoadingAI] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  const handleGetAIPricing = () => {
+    if (!formData.cropType || !formData.quantity) {
+      setErrors({
+        ...errors,
+        cropType: !formData.cropType ? 'Selecciona un tipo de cultivo' : undefined,
+        quantity: !formData.quantity ? 'Ingresa la cantidad disponible' : undefined
+      });
+      return;
+    }
+
+    setIsLoadingAI(true);
+    
+    // Simulate AI pricing analysis
+    setTimeout(() => {
+      const basePrice = formData.cropType === 'cacao' ? 8.5 : formData.cropType === 'cafe' ? 6.2 : 3.8;
+      const quantity = parseFloat(formData.quantity) || 1;
+      const pricePerUnit = basePrice + (Math.random() * 2 - 1);
+      const totalUSD = (pricePerUnit * quantity).toFixed(2);
+      const totalVES = (parseFloat(totalUSD) * 36.5).toFixed(2);
+
+      setAiSuggestion({
+        usd: `$${totalUSD}`,
+        ves: `Bs. ${totalVES}`
+      });
+      setFormData({
+        ...formData,
+        priceUSD: totalUSD,
+        priceVES: totalVES
+      });
+      setIsLoadingAI(false);
+    }, 2000);
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+
+    if (!formData.cropType) {
+      newErrors.cropType = 'Selecciona un tipo de cultivo';
+    }
+    if (!formData.quantity || parseFloat(formData.quantity) <= 0) {
+      newErrors.quantity = 'Ingresa una cantidad válida';
+    }
+    if (formData.photos.length === 0) {
+      newErrors.photos = 'Agrega al menos una foto del producto';
+    }
+    if (!formData.priceUSD || parseFloat(formData.priceUSD) <= 0) {
+      newErrors.priceUSD = 'Ingresa un precio válido';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    // Simulate offer creation
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setShowSuccess(true);
+      
+      setTimeout(() => {
+        router.push('/producer-dashboard');
+      }, 2000);
+    }, 1500);
+  };
+
+  const handleCertificationToggle = (cert: string) => {
+    const newCerts = formData.certifications.includes(cert)
+      ? formData.certifications.filter(c => c !== cert)
+      : [...formData.certifications, cert];
+    setFormData({ ...formData, certifications: newCerts });
+  };
+
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-pulse text-muted-foreground">Cargando...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <button
+            onClick={() => router.push('/producer-dashboard')}
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4"
+          >
+            <Icon name="ArrowLeftIcon" size={20} />
+            <span className="text-sm">Volver al Panel</span>
+          </button>
+          <h1 className="font-heading text-3xl md:text-4xl font-bold text-foreground mb-2">
+            Crear Nueva Oferta
+          </h1>
+          <p className="text-muted-foreground">
+            Completa los detalles de tu producto para publicarlo en el mercado
+          </p>
+        </div>
+
+        {/* Form Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Form - Left Column */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Crop Selection */}
+            <CropSelectionCard
+              selectedCrop={formData.cropType}
+              onCropSelect={(crop) => {
+                setFormData({ ...formData, cropType: crop });
+                setErrors({ ...errors, cropType: undefined });
+              }}
+            />
+            {errors.cropType && (
+              <p className="text-sm text-error -mt-4 ml-2">{errors.cropType}</p>
+            )}
+
+            {/* Quantity & Quality */}
+            <QuantityQualityCard
+              quantity={formData.quantity}
+              unit={formData.unit}
+              certifications={formData.certifications}
+              onQuantityChange={(value) => {
+                setFormData({ ...formData, quantity: value });
+                setErrors({ ...errors, quantity: undefined });
+              }}
+              onUnitChange={(value) => setFormData({ ...formData, unit: value })}
+              onCertificationToggle={handleCertificationToggle}
+            />
+            {errors.quantity && (
+              <p className="text-sm text-error -mt-4 ml-2">{errors.quantity}</p>
+            )}
+
+            {/* Photo Upload */}
+            <PhotoUploadCard
+              photos={formData.photos}
+              onPhotosChange={(photos) => {
+                setFormData({ ...formData, photos });
+                setErrors({ ...errors, photos: undefined });
+              }}
+            />
+            {errors.photos && (
+              <p className="text-sm text-error -mt-4 ml-2">{errors.photos}</p>
+            )}
+
+            {/* Pricing */}
+            <PricingCard
+              priceVES={formData.priceVES}
+              priceUSD={formData.priceUSD}
+              aiSuggestionVES={aiSuggestion.ves}
+              aiSuggestionUSD={aiSuggestion.usd}
+              isLoadingAI={isLoadingAI}
+              onPriceVESChange={(value) => setFormData({ ...formData, priceVES: value })}
+              onPriceUSDChange={(value) => {
+                setFormData({ ...formData, priceUSD: value });
+                setErrors({ ...errors, priceUSD: undefined });
+              }}
+              onGetAIPricing={handleGetAIPricing}
+            />
+            {errors.priceUSD && (
+              <p className="text-sm text-error -mt-4 ml-2">{errors.priceUSD}</p>
+            )}
+
+            {/* Submit Button - Mobile */}
+            <div className="lg:hidden">
+              <button
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className="w-full px-6 py-4 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-all animation-ease-out disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+              >
+                {isSubmitting ? 'Publicando Oferta...' : 'Publicar Oferta'}
+              </button>
+            </div>
+          </div>
+
+          {/* Preview & Actions - Right Column */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-24 space-y-6">
+              <OfferPreviewCard
+                cropType={formData.cropType}
+                quantity={formData.quantity}
+                unit={formData.unit}
+                priceUSD={formData.priceUSD}
+                certifications={formData.certifications}
+                photos={formData.photos}
+              />
+
+              {/* Submit Button - Desktop */}
+              <div className="hidden lg:block">
+                <button
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                  className="w-full px-6 py-4 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-all animation-ease-out disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                >
+                  {isSubmitting ? 'Publicando Oferta...' : 'Publicar Oferta'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Success Modal */}
+      {showSuccess && (
+        <div className="fixed inset-0 z-[500] bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-lg p-8 max-w-md w-full shadow-xl animation-spring">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mb-4">
+                <Icon name="CheckCircleIcon" size={40} variant="solid" className="text-success" />
+              </div>
+              <h3 className="font-heading text-xl font-bold text-foreground mb-2">
+                ¡Oferta Publicada!
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                Tu oferta está ahora visible para compradores en todo el mundo
+              </p>
+              <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-primary animation-pulse-subtle" style={{ width: '100%' }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ProducerOfferCreationInteractive;
+
+===FILE: src/app/producer-offer-creation/components/QuantityQualityCard.tsx===
+'use client';
+
+
+import Icon from '@/components/ui/AppIcon';
+
+interface QuantityQualityCardProps {
+  quantity: string;
+  unit: string;
+  certifications: string[];
+  onQuantityChange: (value: string) => void;
+  onUnitChange: (value: string) => void;
+  onCertificationToggle: (cert: string) => void;
+}
+
+const QuantityQualityCard = ({
+  quantity,
+  unit,
+  certifications,
+  onQuantityChange,
+  onUnitChange,
+  onCertificationToggle
+}: QuantityQualityCardProps) => {
+  const units = ['kg', 'ton', 'sacos'];
+  const availableCertifications = [
+    { id: 'organic', label: 'Orgánico', icon: 'CheckBadgeIcon' },
+    { id: 'fair-trade', label: 'Comercio Justo', icon: 'HandThumbUpIcon' },
+    { id: 'quality-seal', label: 'Sello de Calidad', icon: 'StarIcon' }
+  ];
+
+  return (
+    <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
+      <h2 className="font-heading text-lg font-semibold text-foreground mb-4">
+        Cantidad y Calidad
+      </h2>
+      
+      {/* Quantity Input */}
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-foreground mb-2">
+          Cantidad Disponible
+        </label>
+        <div className="flex gap-3">
+          <input
+            type="number"
+            value={quantity}
+            onChange={(e) => onQuantityChange(e.target.value)}
+            placeholder="0"
+            min="0"
+            step="0.01"
+            className="flex-1 px-4 py-3 border border-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          <select
+            value={unit}
+            onChange={(e) => onUnitChange(e.target.value)}
+            className="px-4 py-3 border border-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring bg-background"
+          >
+            {units.map((u) => (
+              <option key={u} value={u}>{u}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Certifications */}
+      <div>
+        <label className="block text-sm font-medium text-foreground mb-3">
+          Certificaciones
+        </label>
+        <div className="space-y-3">
+          {availableCertifications.map((cert) => (
+            <label
+              key={cert.id}
+              className="flex items-center gap-3 cursor-pointer group"
+            >
+              <input
+                type="checkbox"
+                checked={certifications.includes(cert.id)}
+                onChange={() => onCertificationToggle(cert.id)}
+                className="w-5 h-5 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+              />
+              <Icon 
+                name={cert.icon as any} 
+                size={20} 
+                className="text-accent group-hover:text-accent/80 transition-colors"
+              />
+              <span className="text-sm text-foreground group-hover:text-primary transition-colors">
+                {cert.label}
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default QuantityQualityCard;
+
+===FILE: src/app/producer-offer-creation/page.tsx===
+import type { Metadata } from 'next';
+import Header from '@/components/common/Header';
+import AIAssistantToggle from '@/components/common/AIAssistantToggle';
+import ProducerOfferCreationInteractive from './components/ProducerOfferCreationInteractive';
+
+export const metadata: Metadata = {
+  title: 'Crear Oferta - ZUMA Marketplace',
+  description: 'Publica tus productos agrícolas venezolanos con precios justos recomendados por IA. Conecta directamente con compradores globales.',
+};
+
+export default function ProducerOfferCreationPage() {
+  return (
+    <>
+      <Header userRole="producer" />
+      <ProducerOfferCreationInteractive />
+      <AIAssistantToggle />
+    </>
+  );
+}
+
+===FILE: src/app/splash-screen/components/AnimatedLogo.tsx===
+'use client';
+
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
+
+interface AnimatedLogoProps {
+  onAnimationComplete?: () => void;
+}
+
+const AnimatedLogo = ({ onAnimationComplete }: AnimatedLogoProps) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const [showGeometric, setShowGeometric] = useState(false);
+
+  useEffect(() => {
+    const logoTimer = setTimeout(() => setIsVisible(true), 300);
+    const geometricTimer = setTimeout(() => setShowGeometric(true), 1000);
+    const completeTimer = setTimeout(() => {
+      onAnimationComplete?.();
+    }, 2000);
+
+    return () => {
+      clearTimeout(logoTimer);
+      clearTimeout(geometricTimer);
+      clearTimeout(completeTimer);
+    };
+  }, [onAnimationComplete]);
+
+  return (
+    <div className="relative flex items-center justify-center">
+      {/* Geometric Background Elements */}
+      <div
+        className={`absolute inset-0 transition-opacity duration-1000 ${
+        showGeometric ? 'opacity-100' : 'opacity-0'}`
+        }>
+
+        <div className="absolute top-0 left-1/4 w-16 h-16 border-2 border-primary/30 rotate-45 animation-pulse-subtle" />
+        <div className="absolute bottom-0 right-1/4 w-20 h-20 border-2 border-accent/30 rotate-12 animation-pulse-subtle" />
+        <div className="absolute top-1/3 right-1/3 w-12 h-12 bg-primary/10 rounded-full animation-pulse-subtle" />
+      </div>
+
+      {/* Main Logo */}
+      <div
+        className={`relative z-10 transition-all duration-1000 ${
+        isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`
+        }>
+
+        <div className="flex flex-col items-center">
+          <Image
+            src="/assets/images/upscalemedia-transformed_1_-1763869666562.png"
+            alt="ZUMA Venezuelan indigenous-inspired geometric logo with triangular crown motif and Venezuelan Gold design"
+            width={180}
+            height={180}
+            className="drop-shadow-lg"
+            priority />
+
+          <div className="mt-6 text-center">
+            <h1 className="font-heading text-4xl font-bold text-primary"></h1>
+            <p className="caption text-sm text-muted-foreground mt-2">
+
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>);
+
+};
+
+export default AnimatedLogo;
+
+===FILE: src/app/splash-screen/components/RoleCard.tsx===
+'use client';
+
+import Icon from '@/components/ui/AppIcon';
+
+interface RoleCardProps {
+  role: 'producer' | 'buyer';
+  title: string;
+  description: string;
+  iconName: 'UserGroupIcon' | 'ShoppingBagIcon';
+  isSelected: boolean;
+  onClick: () => void;
+}
+
+const RoleCard = ({
+  role,
+  title,
+  description,
+  iconName,
+  isSelected,
+  onClick
+}: RoleCardProps) => {
+  return (
+    <button
+      onClick={onClick}
+      className={`
+        w-full p-6 rounded-lg border-2 transition-all animation-ease-out
+        ${
+          isSelected
+            ? 'border-primary bg-primary/10 shadow-md scale-105'
+            : 'border-border bg-card hover:border-primary/50 hover:shadow-sm hover:scale-102'
+        }
+      `}
+      aria-label={`Seleccionar rol de ${title}`}
+    >
+      <div className="flex flex-col items-center text-center space-y-4">
+        <div
+          className={`
+          w-16 h-16 rounded-full flex items-center justify-center
+          ${isSelected ? 'bg-primary' : 'bg-muted'}
+          transition-colors animation-ease-out
+        `}
+        >
+          <Icon
+            name={iconName}
+            size={32}
+            variant="solid"
+            className={isSelected ? 'text-primary-foreground' : 'text-foreground'}
+          />
+        </div>
+        <div>
+          <h3 className="font-heading text-xl font-semibold text-foreground mb-2">
+            {title}
+          </h3>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            {description}
+          </p>
+        </div>
+      </div>
+    </button>
+  );
+};
+
+export default RoleCard;
+
+===FILE: src/app/splash-screen/components/SplashScreenInteractive.tsx===
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import AnimatedLogo from './AnimatedLogo';
+import RoleCard from './RoleCard';
+
+interface RoleOption {
+  id: 'producer' | 'buyer';
+  title: string;
+  description: string;
+  iconName: 'UserGroupIcon' | 'ShoppingBagIcon';
+  route: string;
+}
+
+const SplashScreenInteractive = () => {
+  const router = useRouter();
+  const [showRoleSelection, setShowRoleSelection] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<'producer' | 'buyer' | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  const roleOptions: RoleOption[] = [
+    {
+      id: 'producer',
+      title: 'Productor',
+      description: 'Vende tus cultivos directamente a compradores globales con precios justos impulsados por IA',
+      iconName: 'UserGroupIcon',
+      route: '/producer-dashboard'
+    },
+    {
+      id: 'buyer',
+      title: 'Comprador',
+      description: 'Descubre productos agrícolas auténticos de Venezuela con calidad verificada',
+      iconName: 'ShoppingBagIcon',
+      route: '/buyer-marketplace-feed'
+    }
+  ];
+
+  const handleAnimationComplete = () => {
+    setShowRoleSelection(true);
+  };
+
+  const handleRoleSelect = (role: 'producer' | 'buyer') => {
+    setSelectedRole(role);
+  };
+
+  const handleContinue = () => {
+    if (!selectedRole) return;
+
+    setIsTransitioning(true);
+    
+    // Store role preference
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('userRole', selectedRole);
+    }
+
+    const selectedOption = roleOptions.find(opt => opt.id === selectedRole);
+    
+    setTimeout(() => {
+      if (selectedOption) {
+        router.push(selectedOption.route);
+      }
+    }, 500);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background flex items-center justify-center p-4">
+      <div
+        className={`w-full max-w-2xl transition-opacity duration-500 ${
+          isTransitioning ? 'opacity-0' : 'opacity-100'
+        }`}
+      >
+        {/* Animated Logo Section */}
+        <div className="mb-12">
+          <AnimatedLogo onAnimationComplete={handleAnimationComplete} />
+        </div>
+
+        {/* Role Selection Section */}
+        <div
+          className={`transition-all duration-700 ${
+            showRoleSelection
+              ? 'opacity-100 translate-y-0' :'opacity-0 translate-y-8'
+          }`}
+        >
+          <div className="text-center mb-8">
+            <h2 className="font-heading text-2xl font-semibold text-foreground mb-2">
+              Selecciona tu Rol
+            </h2>
+            <p className="text-muted-foreground">
+              Elige cómo deseas usar ZUMA Marketplace
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            {roleOptions.map((option) => (
+              <RoleCard
+                key={option.id}
+                role={option.id}
+                title={option.title}
+                description={option.description}
+                iconName={option.iconName}
+                isSelected={selectedRole === option.id}
+                onClick={() => handleRoleSelect(option.id)}
+              />
+            ))}
+          </div>
+
+          {/* Continue Button */}
+          <button
+            onClick={handleContinue}
+            disabled={!selectedRole}
+            className={`
+              w-full py-4 rounded-lg font-heading font-semibold text-lg
+              transition-all animation-ease-out
+              ${
+                selectedRole
+                  ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg'
+                  : 'bg-muted text-muted-foreground cursor-not-allowed'
+              }
+            `}
+          >
+            Continuar
+          </button>
+
+          {/* Helper Text */}
+          <p className="text-center text-xs text-muted-foreground mt-4">
+            Puedes cambiar tu rol en cualquier momento desde la configuración
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SplashScreenInteractive;
+
+===FILE: src/app/splash-screen/page.tsx===
+import type { Metadata } from 'next';
+import SplashScreenInteractive from './components/SplashScreenInteractive';
+
+export const metadata: Metadata = {
+  title: 'Bienvenido - ZUMA Marketplace',
+  description: 'Plataforma de marketplace agrícola impulsada por IA que conecta productores venezolanos con compradores globales para cacao, café y plátano.',
+};
+
+export default function SplashScreenPage() {
+  return <SplashScreenInteractive />;
+}
+
+===FILE: src/app/layout.tsx===
+import React from 'react';
+import '../styles/index.css';
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+};
+
+export const metadata = {
+  title: 'ZUMA - Marketplace Agrícola',
+  description: 'Plataforma de marketplace agrícola venezolano conectando productores y compradores',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', type: 'image/x-icon' },
+      { url: '/assets/images/upscalemedia-transformed_1_-1763869666562.png', sizes: '192x192', type: 'image/png' }
+    ],
+    apple: [
+      { url: '/assets/images/upscalemedia-transformed_1_-1763869666562.png', sizes: '180x180', type: 'image/png' }
+    ]
+  },
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body>{children}
+
+        <script type="module" async src="https://static.rocket.new/rocket-web.js?_cfg=https%3A%2F%2Fzumamarke4103back.builtwithrocket.new&_be=https%3A%2F%2Fappanalytics.rocket.new&_v=0.1.17" />
+        <script type="module" defer src="https://static.rocket.new/rocket-shot.js?v=0.0.2" /></body>
+    </html>
+  );
+}
+
+
+===FILE: src/app/not-found.tsx===
+'use client';
+
+import React from 'react';
+import { useRouter } from 'next/navigation';
+import Icon from '@/components/ui/AppIcon';
+
+const NotFound = () => {
+    const router = useRouter();
+
+    const handleGoHome = () => {
+        router?.push('/');
+    };
+
+    const handleGoBack = () => {
+        if (typeof window !== 'undefined') {
+            window.history?.back();
+        }
+    };
+
+    return (
+        <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
+            <div className="text-center max-w-md">
+                <div className="flex justify-center mb-6">
+                    <div className="relative">
+                        <h1 className="text-9xl font-bold text-primary opacity-20">404</h1>
+                    </div>
+                </div>
+
+                <h2 className="text-2xl font-medium text-onBackground mb-2">Page Not Found</h2>
+                <p className="text-onBackground/70 mb-8">
+                    The page you're looking for doesn't exist. Let's get you back!
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button
+                        onClick={handleGoBack}
+                        className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors duration-200"
+                    >
+                        <Icon name="ArrowLeftIcon" size={16} />
+                        Go Back
+                    </button>
+
+                    <button
+                        onClick={handleGoHome}
+                        className="inline-flex items-center justify-center gap-2 border border-border bg-background text-foreground px-6 py-3 rounded-lg font-medium hover:bg-accent hover:text-accent-foreground transition-colors duration-200"
+                    >
+                        <Icon name="HomeIcon" size={16} />
+                        Back to Home
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default NotFound;
+
+===FILE: src/components/common/AIAssistantToggle.tsx===
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Icon from '@/components/ui/AppIcon';
+
+interface AIAssistantToggleProps {
+  className?: string;
+}
+
+const AIAssistantToggle = ({ className = '' }: AIAssistantToggleProps) => {
+  const router = useRouter();
+  const [hasUnread, setHasUnread] = useState(false);
+
+  const handleToggle = () => {
+    router.push('/ai-assistant-chat');
+  };
+
+  return (
+    <button
+      onClick={handleToggle}
+      className={`
+        fixed bottom-6 right-6 z-[400]
+        w-14 h-14 rounded-full
+        bg-primary text-primary-foreground
+        shadow-lg hover:shadow-xl
+        flex items-center justify-center
+        transition-all animation-ease-out
+        hover:scale-110
+        animation-pulse-subtle
+        ${className}
+      `}
+      aria-label="Asistente AI"
+      title="Asistente AI - Ayuda con precios y consultas"
+    >
+      <Icon name="SparklesIcon" size={28} variant="solid" />
+      {hasUnread && (
+        <span className="absolute top-0 right-0 w-3 h-3 bg-error rounded-full border-2 border-background" />
+      )}
+    </button>
+  );
+};
+
+export default AIAssistantToggle;
+
+===FILE: src/components/common/FilterPanel.tsx===
+'use client';
+
+import { useState } from 'react';
+import Icon from '@/components/ui/AppIcon';
+
+interface FilterOption {
+  id: string;
+  label: string;
+  value: string;
+}
+
+interface FilterPanelProps {
+  onFilterChange?: (filters: FilterState) => void;
+  className?: string;
+}
+
+interface FilterState {
+  cropType: string[];
+  priceRange: { min: number; max: number };
+  location: string[];
+  certification: string[];
+}
+
+const FilterPanel = ({ onFilterChange, className = '' }: FilterPanelProps) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [filters, setFilters] = useState<FilterState>({
+    cropType: [],
+    priceRange: { min: 0, max: 10000 },
+    location: [],
+    certification: []
+  });
+
+  const cropTypes: FilterOption[] = [
+    { id: 'coffee', label: 'Café', value: 'coffee' },
+    { id: 'cacao', label: 'Cacao', value: 'cacao' },
+    { id: 'corn', label: 'Maíz', value: 'corn' },
+    { id: 'beans', label: 'Frijoles', value: 'beans' }
+  ];
+
+  const locations: FilterOption[] = [
+    { id: 'merida', label: 'Mérida', value: 'merida' },
+    { id: 'tachira', label: 'Táchira', value: 'tachira' },
+    { id: 'zulia', label: 'Zulia', value: 'zulia' },
+    { id: 'lara', label: 'Lara', value: 'lara' }
+  ];
+
+  const certifications: FilterOption[] = [
+    { id: 'organic', label: 'Orgánico', value: 'organic' },
+    { id: 'fair-trade', label: 'Comercio Justo', value: 'fair-trade' },
+    { id: 'quality-seal', label: 'Sello de Calidad', value: 'quality-seal' }
+  ];
+
+  const handleCropTypeToggle = (value: string) => {
+    const newCropTypes = filters.cropType.includes(value)
+      ? filters.cropType.filter(t => t !== value)
+      : [...filters.cropType, value];
+    
+    const newFilters = { ...filters, cropType: newCropTypes };
+    setFilters(newFilters);
+    onFilterChange?.(newFilters);
+  };
+
+  const handleLocationToggle = (value: string) => {
+    const newLocations = filters.location.includes(value)
+      ? filters.location.filter(l => l !== value)
+      : [...filters.location, value];
+    
+    const newFilters = { ...filters, location: newLocations };
+    setFilters(newFilters);
+    onFilterChange?.(newFilters);
+  };
+
+  const handleCertificationToggle = (value: string) => {
+    const newCertifications = filters.certification.includes(value)
+      ? filters.certification.filter(c => c !== value)
+      : [...filters.certification, value];
+    
+    const newFilters = { ...filters, certification: newCertifications };
+    setFilters(newFilters);
+    onFilterChange?.(newFilters);
+  };
+
+  const handlePriceChange = (type: 'min' | 'max', value: number) => {
+    const newFilters = {
+      ...filters,
+      priceRange: { ...filters.priceRange, [type]: value }
+    };
+    setFilters(newFilters);
+    onFilterChange?.(newFilters);
+  };
+
+  const handleReset = () => {
+    const resetFilters: FilterState = {
+      cropType: [],
+      priceRange: { min: 0, max: 10000 },
+      location: [],
+      certification: []
+    };
+    setFilters(resetFilters);
+    onFilterChange?.(resetFilters);
+  };
+
+  const activeFilterCount = 
+    filters.cropType.length + 
+    filters.location.length + 
+    filters.certification.length +
+    (filters.priceRange.min > 0 || filters.priceRange.max < 10000 ? 1 : 0);
+
+  const FilterContent = () => (
+    <div className="space-y-6">
+      {/* Crop Type */}
+      <div>
+        <h3 className="font-heading text-sm font-semibold text-foreground mb-3">
+          Tipo de Cultivo
+        </h3>
+        <div className="flex flex-wrap gap-2">
+          {cropTypes.map(crop => (
+            <button
+              key={crop.id}
+              onClick={() => handleCropTypeToggle(crop.value)}
+              className={`
+                px-4 py-2 rounded-md text-sm font-medium
+                transition-all animation-ease-out
+                ${filters.cropType.includes(crop.value)
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                }
+              `}
+            >
+              {crop.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Price Range */}
+      <div>
+        <h3 className="font-heading text-sm font-semibold text-foreground mb-3">
+          Rango de Precio (USD)
+        </h3>
+        <div className="flex items-center gap-3">
+          <input
+            type="number"
+            value={filters.priceRange.min}
+            onChange={(e) => handlePriceChange('min', Number(e.target.value))}
+            placeholder="Mín"
+            className="w-full px-3 py-2 border border-input rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          <span className="text-muted-foreground">-</span>
+          <input
+            type="number"
+            value={filters.priceRange.max}
+            onChange={(e) => handlePriceChange('max', Number(e.target.value))}
+            placeholder="Máx"
+            className="w-full px-3 py-2 border border-input rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </div>
+      </div>
+
+      {/* Location */}
+      <div>
+        <h3 className="font-heading text-sm font-semibold text-foreground mb-3">
+          Ubicación
+        </h3>
+        <div className="space-y-2">
+          {locations.map(location => (
+            <label
+              key={location.id}
+              className="flex items-center gap-3 cursor-pointer group"
+            >
+              <input
+                type="checkbox"
+                checked={filters.location.includes(location.value)}
+                onChange={() => handleLocationToggle(location.value)}
+                className="w-4 h-4 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+              />
+              <span className="text-sm text-foreground group-hover:text-primary transition-colors">
+                {location.label}
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Certification */}
+      <div>
+        <h3 className="font-heading text-sm font-semibold text-foreground mb-3">
+          Certificaciones
+        </h3>
+        <div className="space-y-2">
+          {certifications.map(cert => (
+            <label
+              key={cert.id}
+              className="flex items-center gap-3 cursor-pointer group"
+            >
+              <input
+                type="checkbox"
+                checked={filters.certification.includes(cert.value)}
+                onChange={() => handleCertificationToggle(cert.value)}
+                className="w-4 h-4 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+              />
+              <span className="text-sm text-foreground group-hover:text-primary transition-colors">
+                {cert.label}
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Desktop Filter Panel */}
+      <div className={`hidden md:block bg-card border border-border rounded-md shadow-sm ${className}`}>
+        <div className="p-4">
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="flex items-center gap-2 text-foreground hover:text-primary transition-colors"
+            >
+              <Icon name="FunnelIcon" size={20} />
+              <span className="font-heading font-semibold">Filtros</span>
+              {activeFilterCount > 0 && (
+                <span className="px-2 py-0.5 bg-primary text-primary-foreground text-xs font-medium rounded-full">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+            {activeFilterCount > 0 && (
+              <button
+                onClick={handleReset}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Limpiar
+              </button>
+            )}
+          </div>
+
+          {isExpanded && <FilterContent />}
+        </div>
+      </div>
+
+      {/* Mobile Filter Button */}
+      <button
+        onClick={() => setIsMobileOpen(true)}
+        className="md:hidden fixed bottom-20 right-6 z-[300] w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center"
+      >
+        <Icon name="FunnelIcon" size={24} />
+        {activeFilterCount > 0 && (
+          <span className="absolute -top-1 -right-1 w-5 h-5 bg-error text-error-foreground text-xs font-bold rounded-full flex items-center justify-center">
+            {activeFilterCount}
+          </span>
+        )}
+      </button>
+
+      {/* Mobile Filter Modal */}
+      {isMobileOpen && (
+        <div className="md:hidden fixed inset-0 z-[300] bg-background">
+          <div className="flex flex-col h-full">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-border">
+              <div className="flex items-center gap-2">
+                <Icon name="FunnelIcon" size={24} />
+                <h2 className="font-heading text-lg font-semibold">Filtros</h2>
+                {activeFilterCount > 0 && (
+                  <span className="px-2 py-0.5 bg-primary text-primary-foreground text-xs font-medium rounded-full">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => setIsMobileOpen(false)}
+                className="p-2 hover:bg-muted rounded-md transition-colors"
+              >
+                <Icon name="XMarkIcon" size={24} />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <FilterContent />
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-border flex gap-3">
+              <button
+                onClick={handleReset}
+                className="flex-1 px-4 py-3 border border-border rounded-md font-medium hover:bg-muted transition-colors"
+              >
+                Limpiar
+              </button>
+              <button
+                onClick={() => setIsMobileOpen(false)}
+                className="flex-1 px-4 py-3 bg-primary text-primary-foreground rounded-md font-medium hover:bg-primary/90 transition-colors"
+              >
+                Aplicar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+export default FilterPanel;
+
+===FILE: src/components/common/Header.tsx===
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import Image from 'next/image';
+import Icon from '@/components/ui/AppIcon';
+
+interface HeaderProps {
+  userRole?: 'producer' | 'buyer' | null;
+}
+
+interface NavigationItem {
+  label: string;
+  path: string;
+  icon: string;
+  roles: ('producer' | 'buyer')[];
+  tooltip: string;
+}
+
+const Header = ({ userRole = null }: HeaderProps) => {
+  const pathname = usePathname();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const navigationItems: NavigationItem[] = [
+    {
+      label: 'Panel',
+      path: '/producer-dashboard',
+      icon: 'ChartBarIcon',
+      roles: ['producer'],
+      tooltip: 'Gestiona tus ofertas y ventas'
+    },
+    {
+      label: 'Crear Oferta',
+      path: '/producer-offer-creation',
+      icon: 'PlusCircleIcon',
+      roles: ['producer'],
+      tooltip: 'Publica un nuevo producto'
+    },
+    {
+      label: 'Mercado',
+      path: '/buyer-marketplace-feed',
+      icon: 'ShoppingBagIcon',
+      roles: ['buyer'],
+      tooltip: 'Explora productos disponibles'
+    },
+    {
+      label: 'Mis Compras',
+      path: '/offer-details',
+      icon: 'ClipboardDocumentListIcon',
+      roles: ['buyer'],
+      tooltip: 'Revisa tus pedidos'
+    }
+  ];
+
+  const filteredNavItems = userRole 
+    ? navigationItems.filter(item => item.roles.includes(userRole))
+    : [];
+
+  const isActive = (path: string) => pathname === path;
+
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isMobileMenuOpen]);
+
+  return (
+    <header className="sticky top-0 z-[100] bg-background border-b border-border shadow-sm">
+      <div className="w-full">
+        <div className="flex items-center justify-between h-16 px-4 md:px-6 lg:px-8">
+          {/* Logo */}
+          <Link href="/" className="flex items-center space-x-2 flex-shrink-0">
+            <Image
+              src="/assets/images/upscalemedia-transformed_1_-1763869666562.png"
+              alt="ZUMA Venezuelan indigenous-inspired geometric logo"
+              width={40}
+              height={40}
+              className="transition-transform hover:scale-105 animation-ease-out"
+              priority
+            />
+            <span className="font-heading text-xl font-bold text-foreground hidden sm:block">
+              ZUMA
+            </span>
+          </Link>
+
+          {/* Desktop Navigation */}
+          {userRole && (
+            <nav className="hidden md:flex items-center space-x-1 ml-8">
+              {filteredNavItems.map((item) => (
+                <Link
+                  key={item.path}
+                  href={item.path}
+                  className={`
+                    flex items-center space-x-2 px-4 py-2 rounded-md
+                    transition-all animation-ease-out
+                    ${isActive(item.path)
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-foreground hover:bg-muted hover:text-foreground'
+                    }
+                  `}
+                  title={item.tooltip}
+                >
+                  <Icon name={item.icon as any} size={20} />
+                  <span className="font-medium text-sm">{item.label}</span>
+                </Link>
+              ))}
+            </nav>
+          )}
+
+          {/* Right Actions */}
+          <div className="flex items-center space-x-3 ml-auto">
+            {/* Profile/Account */}
+            {userRole && (
+              <button
+                className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-muted transition-all animation-ease-out"
+                title="Mi cuenta"
+              >
+                <Icon name="UserCircleIcon" size={24} />
+                <span className="hidden lg:block text-sm font-medium text-foreground">
+                  Cuenta
+                </span>
+              </button>
+            )}
+
+            {/* Mobile Menu Toggle */}
+            {userRole && (
+              <button
+                className="md:hidden p-2 rounded-md hover:bg-muted transition-all animation-ease-out"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                aria-label="Toggle menu"
+              >
+                <Icon 
+                  name={isMobileMenuOpen ? 'XMarkIcon' : 'Bars3Icon'} 
+                  size={24} 
+                />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Mobile Navigation Menu */}
+        {userRole && isMobileMenuOpen && (
+          <div className="md:hidden border-t border-border bg-background">
+            <nav className="px-4 py-3 space-y-1">
+              {filteredNavItems.map((item) => (
+                <Link
+                  key={item.path}
+                  href={item.path}
+                  className={`
+                    flex items-center space-x-3 px-4 py-3 rounded-md
+                    transition-all animation-ease-out
+                    ${isActive(item.path)
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-foreground hover:bg-muted'
+                    }
+                  `}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Icon name={item.icon as any} size={22} />
+                  <span className="font-medium">{item.label}</span>
+                </Link>
+              ))}
+              <button
+                className="flex items-center space-x-3 px-4 py-3 rounded-md w-full text-left hover:bg-muted transition-all animation-ease-out"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Icon name="UserCircleIcon" size={22} />
+                <span className="font-medium text-foreground">Mi Cuenta</span>
+              </button>
+            </nav>
+          </div>
+        )}
+      </div>
+    </header>
+  );
+};
+
+export default Header;
+
+===FILE: src/components/common/OfferActionBar.tsx===
+'use client';
+
+import { useState } from 'react';
+import Icon from '@/components/ui/AppIcon';
+
+interface OfferActionBarProps {
+  offerId: string;
+  producerPhone?: string;
+  producerName?: string;
+  offerTitle?: string;
+  isFavorite?: boolean;
+  onFavoriteToggle?: (isFavorite: boolean) => void;
+  className?: string;
+}
+
+const OfferActionBar = ({
+  offerId,
+  producerPhone = '',
+  producerName = '',
+  offerTitle = '',
+  isFavorite = false,
+  onFavoriteToggle,
+  className = ''
+}: OfferActionBarProps) => {
+  const [favorite, setFavorite] = useState(isFavorite);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+
+  const handleWhatsAppContact = () => {
+    const message = encodeURIComponent(
+      `Hola ${producerName}, estoy interesado en tu oferta: ${offerTitle}`
+    );
+    const whatsappUrl = `https://wa.me/${producerPhone}?text=${message}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  const handleFavoriteToggle = () => {
+    const newFavoriteState = !favorite;
+    setFavorite(newFavoriteState);
+    onFavoriteToggle?.(newFavoriteState);
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: offerTitle,
+      text: `Mira esta oferta en ZUMA Marketplace: ${offerTitle}`,
+      url: window.location.href
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.log('Share cancelled');
+      }
+    } else {
+      setShowShareMenu(!showShareMenu);
+    }
+  };
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setShowShareMenu(false);
+  };
+
+  return (
+    <div className={`sticky top-16 z-50 bg-background border-b border-border shadow-sm ${className}`}>
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-3">
+        <div className="flex items-center justify-between gap-3">
+          {/* Primary Action - WhatsApp */}
+          <button
+            onClick={handleWhatsAppContact}
+            disabled={!producerPhone}
+            className="
+              flex-1 md:flex-none
+              flex items-center justify-center gap-2
+              px-6 py-3 rounded-md
+              bg-accent text-accent-foreground
+              hover:bg-accent/90
+              disabled:opacity-50 disabled:cursor-not-allowed
+              transition-all animation-ease-out
+              shadow-sm hover:shadow-md
+              font-medium
+            "
+          >
+            <Icon name="ChatBubbleLeftRightIcon" size={20} variant="solid" />
+            <span className="hidden sm:inline">Contactar Productor</span>
+            <span className="sm:hidden">Contactar</span>
+          </button>
+
+          {/* Secondary Actions */}
+          <div className="flex items-center gap-2">
+            {/* Favorite */}
+            <button
+              onClick={handleFavoriteToggle}
+              className="
+                p-3 rounded-md
+                border border-border
+                hover:bg-muted
+                transition-all animation-ease-out
+              "
+              aria-label={favorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+            >
+              <Icon 
+                name="HeartIcon" 
+                size={20} 
+                variant={favorite ? 'solid' : 'outline'}
+                className={favorite ? 'text-error' : 'text-foreground'}
+              />
+            </button>
+
+            {/* Share */}
+            <div className="relative">
+              <button
+                onClick={handleShare}
+                className="
+                  p-3 rounded-md
+                  border border-border
+                  hover:bg-muted
+                  transition-all animation-ease-out
+                "
+                aria-label="Compartir oferta"
+              >
+                <Icon name="ShareIcon" size={20} />
+              </button>
+
+              {/* Share Menu (fallback for browsers without native share) */}
+              {showShareMenu && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-popover border border-border rounded-md shadow-lg z-[200]">
+                  <button
+                    onClick={copyLink}
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted transition-all animation-ease-out text-left"
+                  >
+                    <Icon name="LinkIcon" size={18} />
+                    <span className="text-sm">Copiar enlace</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Overlay to close share menu */}
+      {showShareMenu && (
+        <div
+          className="fixed inset-0 z-[199]"
+          onClick={() => setShowShareMenu(false)}
+        />
+      )}
+    </div>
+  );
+};
+
+export default OfferActionBar;
+
+===FILE: src/components/ui/AppIcon.tsx===
+'use client';
+
+import React from 'react';
+import * as HeroIcons from '@heroicons/react/24/outline';
+import * as HeroIconsSolid from '@heroicons/react/24/solid';
+import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
+
+type IconVariant = 'outline' | 'solid';
+
+interface IconProps {
+    name: string; // Changed to string to accept dynamic values
+    variant?: IconVariant;
+    size?: number;
+    className?: string;
+    onClick?: () => void;
+    disabled?: boolean;
+    [key: string]: any;
+}
+
+function Icon({
+    name,
+    variant = 'outline',
+    size = 24,
+    className = '',
+    onClick,
+    disabled = false,
+    ...props
+}: IconProps) {
+    const iconSet = variant === 'solid' ? HeroIconsSolid : HeroIcons;
+    const IconComponent = iconSet[name as keyof typeof iconSet] as React.ComponentType<any>;
+
+    if (!IconComponent) {
+        return (
+            <QuestionMarkCircleIcon
+                width={size}
+                height={size}
+                className={`text-gray-400 ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
+                onClick={disabled ? undefined : onClick}
+                {...props}
+            />
+        );
+    }
+
+    return (
+        <IconComponent
+            width={size}
+            height={size}
+            className={`${disabled ? 'opacity-50 cursor-not-allowed' : onClick ? 'cursor-pointer hover:opacity-80' : ''} ${className}`}
+            onClick={disabled ? undefined : onClick}
+            {...props}
+        />
+    );
+}
+
+export default Icon; 
+
+===FILE: src/components/ui/AppImage.tsx===
+'use client';
+
+import React, { useState } from 'react';
+import Image from 'next/image';
+
+interface AppImageProps {
+    src: string;
+    alt: string;
+    width?: number;
+    height?: number;
+    className?: string;
+    priority?: boolean;
+    quality?: number;
+    placeholder?: 'blur' | 'empty';
+    blurDataURL?: string;
+    fill?: boolean;
+    sizes?: string;
+    onClick?: () => void;
+    fallbackSrc?: string;
+    [key: string]: any;
+}
+
+function AppImage({
+    src,
+    alt,
+    width,
+    height,
+    className = '',
+    priority = false,
+    quality = 75,
+    placeholder = 'empty',
+    blurDataURL,
+    fill = false,
+    sizes,
+    onClick,
+    fallbackSrc = '/assets/images/no_image.png',
+    ...props
+}: AppImageProps) {
+    const [imageSrc, setImageSrc] = useState(src);
+    const [isLoading, setIsLoading] = useState(true);
+    const [hasError, setHasError] = useState(false);
+
+    // More reliable external URL detection
+    const isExternal = imageSrc.startsWith('http://') || imageSrc.startsWith('https://');
+    const isLocal = imageSrc.startsWith('/') || imageSrc.startsWith('./') || imageSrc.startsWith('data:');
+
+    const handleError = () => {
+        if (!hasError && imageSrc !== fallbackSrc) {
+            setImageSrc(fallbackSrc);
+            setHasError(true);
+        }
+        setIsLoading(false);
+    };
+
+    const handleLoad = () => {
+        setIsLoading(false);
+        setHasError(false);
+    };
+
+    const commonClassName = `${className} ${isLoading ? 'animate-pulse bg-gray-200' : ''} ${onClick ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}`;
+
+    // For external URLs or when in doubt, use regular img tag
+    if (isExternal && !isLocal) {
+        const imgStyle: React.CSSProperties = {};
+
+        if (width) imgStyle.width = width;
+        if (height) imgStyle.height = height;
+
+        if (fill) {
+            return (
+                <div className={`relative ${className}`} style={{ width: width || '100%', height: height || '100%' }}>
+                    <img
+                        src={imageSrc}
+                        alt={alt}
+                        className={`${commonClassName} absolute inset-0 w-full h-full object-cover`}
+                        onError={handleError}
+                        onLoad={handleLoad}
+                        onClick={onClick}
+                        style={imgStyle}
+                        {...props}
+                    />
+                </div>
+            );
+        }
+
+        return (
+            <img
+                src={imageSrc}
+                alt={alt}
+                className={commonClassName}
+                onError={handleError}
+                onLoad={handleLoad}
+                onClick={onClick}
+                style={imgStyle}
+                {...props}
+            />
+        );
+    }
+
+    // For local images and data URLs, use Next.js Image component
+    const imageProps = {
+        src: imageSrc,
+        alt,
+        className: commonClassName,
+        priority,
+        quality,
+        placeholder,
+        blurDataURL,
+        unoptimized: true,
+        onError: handleError,
+        onLoad: handleLoad,
+        onClick,
+        ...props,
+    };
+
+    if (fill) {
+        return (
+            <div className={`relative ${className}`}>
+                <Image
+                    {...imageProps}
+                    fill
+                    sizes={sizes || '100vw'}
+                    style={{ objectFit: 'cover' }}
+                />
+            </div>
+        );
+    }
+
+    return (
+        <Image
+            {...imageProps}
+            width={width || 400}
+            height={height || 300}
+        />
+    );
+}
+
+export default AppImage;
+
+===FILE: src/styles/index.css===
+@import './tailwind.css';
+
+===FILE: src/styles/tailwind.css===
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Primary Colors */
+    --color-primary: #D4A017; /* Venezuelan Gold - yellow-600 */
+    --color-primary-foreground: #2C1A0D; /* Cacao Dark - brown-900 */
+    
+    /* Secondary Colors */
+    --color-secondary: #8B5A2B; /* Coffee Brown - brown-700 */
+    --color-secondary-foreground: #FEFCF8; /* Warm White - gray-50 */
+    
+    /* Accent Colors */
+    --color-accent: #3A5F3A; /* Forest Green - green-800 */
+    --color-accent-foreground: #FEFCF8; /* Warm White - gray-50 */
+    
+    /* Background Colors */
+    --color-background: #FEFCF8; /* Warm White - gray-50 */
+    --color-foreground: #2C1A0D; /* Cacao Dark - brown-900 */
+    
+    /* Surface Colors */
+    --color-card: #F5F0E6; /* Cream - stone-100 */
+    --color-card-foreground: #2C1A0D; /* Cacao Dark - brown-900 */
+    --color-popover: #FEFCF8; /* Warm White - gray-50 */
+    --color-popover-foreground: #2C1A0D; /* Cacao Dark - brown-900 */
+    
+    /* Muted Colors */
+    --color-muted: #F5F0E6; /* Cream - stone-100 */
+    --color-muted-foreground: #5D4A3A; /* Medium Brown - brown-600 */
+    
+    /* Border & Input */
+    --color-border: rgba(139, 90, 43, 0.2); /* Coffee Brown 20% - brown-700 */
+    --color-input: rgba(139, 90, 43, 0.2); /* Coffee Brown 20% - brown-700 */
+    --color-ring: #D4A017; /* Venezuelan Gold - yellow-600 */
+    
+    /* Text Colors */
+    --color-text-primary: #2C1A0D; /* Cacao Dark - brown-900 */
+    --color-text-secondary: #5D4A3A; /* Medium Brown - brown-600 */
+    
+    /* State Colors */
+    --color-success: #2D5A2D; /* Deep Green - green-900 */
+    --color-success-foreground: #FEFCF8; /* Warm White - gray-50 */
+    --color-warning: #B8860B; /* Dark Gold - yellow-700 */
+    --color-warning-foreground: #2C1A0D; /* Cacao Dark - brown-900 */
+    --color-error: #8B3A3A; /* Muted Red - red-800 */
+    --color-error-foreground: #FEFCF8; /* Warm White - gray-50 */
+    --color-destructive: #8B3A3A; /* Muted Red - red-800 */
+    --color-destructive-foreground: #FEFCF8; /* Warm White - gray-50 */
+    
+    /* Border Radius */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    
+    /* Shadows */
+    --shadow-sm: 0 2px 6px rgba(212, 160, 23, 0.15);
+    --shadow-md: 0 4px 12px rgba(212, 160, 23, 0.15);
+    --shadow-lg: 0 8px 24px rgba(212, 160, 23, 0.15);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-weight: 400;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 600;
+  }
+  
+  .caption {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-weight: 400;
+  }
+  
+  .data-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 400;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .animation-ease-out {
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 0.3s;
+  }
+  
+  .animation-spring {
+    transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition-duration: 0.5s;
+  }
+  
+  .animation-pulse-subtle {
+    animation: pulse-subtle 2s ease-in-out infinite;
+  }
+  
+  @keyframes pulse-subtle {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.85;
+    }
+  }
+}
+
+===FILE: .env===
+GEMINI_API_KEY=AIzaSyDUalcKll6hWihqPylSdVQuInfZ27vtCTw
+
+
+===FILE: .eslintrc.json===
+{
+  "root": true,
+  "extends": [
+    "next/core-web-vitals",
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:prettier/recommended"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "plugins": [
+    "@typescript-eslint",
+    "prettier"
+  ],
+  "rules": {
+    "prettier/prettier": [
+      "error",
+      {
+        "endOfLine": "auto",
+        "singleQuote": true,
+        "semi": true,
+        "tabWidth": 2,
+        "printWidth": 100,
+        "trailingComma": "es5"
+      }
+    ],
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }
+    ],
+    "@typescript-eslint/no-explicit-any": "warn",
+    "no-console": [
+      "warn",
+      {
+        "allow": [
+          "warn",
+          "error",
+          "info"
+        ]
+      }
+    ]
+  },
+  "ignorePatterns": [
+    "node_modules/",
+    ".next/",
+    "out/",
+    "public/"
+  ],
+  "env": {
+    "browser": true,
+    "node": true,
+    "es6": true
+  }
+}
+
+===FILE: .gitignore===
+# Node modules
+node_modules/
+package-lock.json
+
+# Next.js build output
+.next/
+out/
+
+# Production build
+build/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Vercel deployment
+.vercel/
+
+# Optional: if using TypeScript
+*.tsbuildinfo
+
+# Optional: if using testing tools
+coverage/
+jest-test-results.json
+
+# Optional: if using IDEs
+.vscode/
+.idea/
+
+# Optional: if using TurboRepo or monorepo
+turbo/
+
+===FILE: .prettierignore===
+# .prettierignore
+build
+coverage
+node_modules
+public
+
+
+===FILE: .prettierrc===
+{
+  "semi": true,
+  "tabWidth": 2,
+  "printWidth": 100,
+  "singleQuote": true,
+  "trailingComma": "es5",
+  "bracketSameLine": false,
+  "endOfLine": "auto"
+}
+
+
+===FILE: next-env.d.ts===
+/// <reference types="next" />
+/// <reference types="next/image-types/global" />
+
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/basic-features/typescript for more information.
+
+
+===FILE: next.config.mjs===
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  productionBrowserSourceMaps: true,
+  distDir: process.env.DIST_DIR || '.next',  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.pexels.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.pixabay.com',
+      },
+    ],
+  },
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/splash-screen',
+        permanent: false,
+      },
+    ];
+  },
+  webpack(config) {
+    config.module.rules.push({
+      test: /\.(jsx|tsx)$/,
+      exclude: [/node_modules/],
+      use: [{
+        loader: '@dhiwise/component-tagger/nextLoader',
+      }],
+    });
+    return config;
+  },
+};
+
+export default nextConfig;
+
+
+===FILE: package.json===
+{
+  "name": "zuma-marketplace",
+  "version": "0.1.0",
+  "private": true,
+  "rocketCritical": {
+    "dependencies": [
+      "next",
+      "react",
+      "react-dom",
+      "@dhiwise/component-tagger",
+      "@tailwindcss/typography",
+      "recharts"
+    ],
+    "devDependencies": [
+      "typescript",
+      "@types/node",
+      "@types/react",
+      "@types/react-dom",
+      "@typescript-eslint/eslint-plugin",
+      "@typescript-eslint/parser",
+      "eslint-config-next",
+      "tailwindcss",
+      "autoprefixer",
+      "postcss",
+      "eslint",
+      "prettier",
+      "@netlify/plugin-nextjs"
+    ],
+    "scripts": [
+      "dev",
+      "build",
+      "start",
+      "lint",
+      "lint:fix",
+      "format",
+      "serve",
+      "type-check"
+    ],
+    "warning": "🚨 CRITICAL: DO NOT REMOVE OR MODIFY ABOVE DEPENDENCIES - Required for Next.js 15 TypeScript app functionality"
+  },
+  "scripts": {
+    "dev": "next dev -p 4028",
+    "build": "next build",
+    "start": "next dev -p 4028",
+    "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css,md,json}\"",
+    "serve": "next start",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@dhiwise/component-tagger": "^1.0.10",
+    "@heroicons/react": "^2.2.0",
+    "@tailwindcss/forms": "^0.5.10",
+    "@tailwindcss/typography": "^0.5.16",
+    "next": "14.2.0",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "recharts": "^2.15.2"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@netlify/plugin-nextjs": "^5.14.7",
+    "@types/node": "^20",
+    "@types/react": "18.2.45",
+    "@types/react-dom": "18.2.0",
+    "@typescript-eslint/eslint-plugin": "^8.29.0",
+    "@typescript-eslint/parser": "^8.29.0",
+    "autoprefixer": "10.4.2",
+    "eslint": "^9",
+    "eslint-config-next": "^15.2.4",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-plugin-prettier": "^5.2.6",
+    "postcss": "8.4.8",
+    "prettier": "^3.5.3",
+    "tailwindcss": "3.4.6",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "^5"
+  }
+}
+
+
+===FILE: postcss.config.js===
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+
+===FILE: README.md===
+# Next.js
+
+A modern Next.js 14 application built with TypeScript and Tailwind CSS.
+
+## 🚀 Features
+
+- **Next.js 14** - Latest version with improved performance and features
+- **React 18** - Latest React version with enhanced capabilities
+- **Tailwind CSS** - Utility-first CSS framework for rapid UI development
+
+## 📋 Prerequisites
+
+- Node.js (v14.x or higher)
+- npm or yarn
+
+
+## 🛠️ Installation
+
+1. Install dependencies:
+  ```bash
+  npm install
+  # or
+  yarn install
+  ```
+
+2. Start the development server:
+  ```bash
+  npm run dev
+  # or
+  yarn dev
+  ```
+3. Open [http://localhost:4028](http://localhost:4028) with your browser to see the result.
+
+## 📁 Project Structure
+
+```
+nextjs-js-tailwind/
+├── public/             # Static assets
+├── src/
+│   ├── app/            # App router components
+│   │   ├── layout.tsx  # Root layout component
+│   │   └── page.tsx    # Main page component
+│   ├── components/     # Reusable UI components
+│   ├── styles/         # Global styles and Tailwind configuration
+├── next.config.mjs     # Next.js configuration
+├── package.json        # Project dependencies and scripts
+├── postcss.config.js   # PostCSS configuration
+└── tailwind.config.js  # Tailwind CSS configuration
+
+```
+
+## 🧩 Page Editing
+
+You can start editing the page by modifying `src/app/page.tsx`. The page auto-updates as you edit the file.
+
+## 🎨 Styling
+
+This project uses Tailwind CSS for styling with the following features:
+- Utility-first approach for rapid development
+- Custom theme configuration
+- Responsive design utilities
+- PostCSS and Autoprefixer integration
+
+## 📦 Available Scripts
+
+- `npm run dev` - Start development server on port 4028
+- `npm run build` - Build the application for production
+- `npm run start` - Start the development server
+- `npm run serve` - Start the production server
+- `npm run lint` - Run ESLint to check code quality
+- `npm run lint:fix` - Fix ESLint issues automatically
+- `npm run format` - Format code with Prettier
+
+## 📱 Deployment
+
+Build the application for production:
+
+  ```bash
+  npm run build
+  ```
+
+## 📚 Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial
+
+You can check out the [Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## 🙏 Acknowledgments
+
+- Built with [Rocket.new](https://rocket.new)
+- Powered by Next.js and React
+- Styled with Tailwind CSS
+
+Built with ❤️ on Rocket.new
+
+===FILE: tailwind.config.js===
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  darkMode: ["class"],
+  content: [
+    './pages/**/*.{ts,tsx}',
+    './components/**/*.{ts,tsx}',
+    './app/**/*.{ts,tsx}',
+    './src/**/*.{ts,tsx}',
+  ],
+  prefix: "",
+  theme: {
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: {
+        "2xl": "1400px",
+      },
+    },
+    extend: {
+      colors: {
+        border: "var(--color-border)", /* Coffee Brown 20% - brown-700 */
+        input: "var(--color-input)", /* Coffee Brown 20% - brown-700 */
+        ring: "var(--color-ring)", /* Venezuelan Gold - yellow-600 */
+        background: "var(--color-background)", /* Warm White - gray-50 */
+        foreground: "var(--color-foreground)", /* Cacao Dark - brown-900 */
+        primary: {
+          DEFAULT: "var(--color-primary)", /* Venezuelan Gold - yellow-600 */
+          foreground: "var(--color-primary-foreground)", /* Cacao Dark - brown-900 */
+        },
+        secondary: {
+          DEFAULT: "var(--color-secondary)", /* Coffee Brown - brown-700 */
+          foreground: "var(--color-secondary-foreground)", /* Warm White - gray-50 */
+        },
+        destructive: {
+          DEFAULT: "var(--color-destructive)", /* Muted Red - red-800 */
+          foreground: "var(--color-destructive-foreground)", /* Warm White - gray-50 */
+        },
+        muted: {
+          DEFAULT: "var(--color-muted)", /* Cream - stone-100 */
+          foreground: "var(--color-muted-foreground)", /* Medium Brown - brown-600 */
+        },
+        accent: {
+          DEFAULT: "var(--color-accent)", /* Forest Green - green-800 */
+          foreground: "var(--color-accent-foreground)", /* Warm White - gray-50 */
+        },
+        popover: {
+          DEFAULT: "var(--color-popover)", /* Warm White - gray-50 */
+          foreground: "var(--color-popover-foreground)", /* Cacao Dark - brown-900 */
+        },
+        card: {
+          DEFAULT: "var(--color-card)", /* Cream - stone-100 */
+          foreground: "var(--color-card-foreground)", /* Cacao Dark - brown-900 */
+        },
+        success: {
+          DEFAULT: "var(--color-success)", /* Deep Green - green-900 */
+          foreground: "var(--color-success-foreground)", /* Warm White - gray-50 */
+        },
+        warning: {
+          DEFAULT: "var(--color-warning)", /* Dark Gold - yellow-700 */
+          foreground: "var(--color-warning-foreground)", /* Cacao Dark - brown-900 */
+        },
+        error: {
+          DEFAULT: "var(--color-error)", /* Muted Red - red-800 */
+          foreground: "var(--color-error-foreground)", /* Warm White - gray-50 */
+        },
+      },
+      borderRadius: {
+        lg: "var(--radius-lg)",
+        md: "var(--radius-md)",
+        sm: "var(--radius-sm)",
+      },
+      boxShadow: {
+        sm: "var(--shadow-sm)",
+        md: "var(--shadow-md)",
+        lg: "var(--shadow-lg)",
+      },
+      fontFamily: {
+        heading: ['Playfair Display', 'Georgia', 'serif'],
+        body: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        caption: ['Source Sans Pro', 'sans-serif'],
+        data: ['JetBrains Mono', 'monospace'],
+      },
+      spacing: {
+        '18': '4.5rem',
+        '88': '22rem',
+      },
+      keyframes: {
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+        "pulse-subtle": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.85" },
+        },
+      },
+      animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+        "pulse-subtle": "pulse-subtle 2s ease-in-out infinite",
+      },
+    },
+  },
+  plugins: [],
+}
+
+===FILE: tsconfig.json===
+{
+  "compilerOptions": {
+    "target": "es5",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    },
+    "isolatedModules": true
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "types/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
+
+
