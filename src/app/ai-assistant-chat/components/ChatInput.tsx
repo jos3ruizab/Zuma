@@ -68,7 +68,7 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
             onChange={handleImageSelect}
             className="hidden"
           />
-
+          
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}

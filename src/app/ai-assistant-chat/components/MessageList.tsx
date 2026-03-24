@@ -53,11 +53,11 @@ export default function MessageList({ messages, isTyping }: MessageListProps) {
                 />
               </div>
             )}
-
+            
             <p className="text-sm whitespace-pre-line leading-relaxed">
               {message.content}
             </p>
-
+            
             <div className={`flex items-center gap-1 mt-2 text-xs ${
               message.role === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'
             }`}>

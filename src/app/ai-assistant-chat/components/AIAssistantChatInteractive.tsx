@@ -34,7 +34,7 @@ export default function AIAssistantChatInteractive() {
 
   useEffect(() => {
     setIsHydrated(true);
-
+    
     // Simulate role detection from localStorage
     const role = 'producer' as 'producer' | 'buyer';
     setUserRole(role);
@@ -105,10 +105,10 @@ export default function AIAssistantChatInteractive() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header userRole={userRole} />
-
+      
       <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
         <ChatHeader onClose={handleClose} />
-
+        
         <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
           <MessageList messages={messages} isTyping={isTyping} />
           <div ref={messagesEndRef} />
