@@ -34,7 +34,7 @@ export default function AIAssistantChatInteractive() {
 
   useEffect(() => {
     setIsHydrated(true);
-    
+
     // Simulate role detection from localStorage
     const role = 'producer' as 'producer' | 'buyer';
     setUserRole(role);
@@ -43,8 +43,9 @@ export default function AIAssistantChatInteractive() {
     const greeting: Message = {
       id: '1',
       role: 'assistant',
-      content: '¡Hola! Soy tu asistente IA de ZUMA Marketplace. Puedo ayudarte con:\n\n• Análisis de precios de mercado\n• Evaluación de calidad de cultivos\n• Estrategias de venta\n• Navegación de la plataforma\n\n¿En qué puedo asistirte hoy?',
-      timestamp: new Date()
+      content:
+        '¡Hola! Soy tu asistente IA de ZUMA Marketplace. Puedo ayudarte con:\n\n• Análisis de precios de mercado\n• Evaluación de calidad de cultivos\n• Estrategias de venta\n• Navegación de la plataforma\n\n¿En qué puedo asistirte hoy?',
+      timestamp: new Date(),
     };
     setMessages([greeting]);
   }, []);
@@ -66,22 +67,22 @@ export default function AIAssistantChatInteractive() {
       content: content.trim(),
       timestamp: new Date(),
       imageUrl,
-      imageAlt
+      imageAlt,
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setIsTyping(true);
 
     // Simulate AI response
     setTimeout(() => {
-      const aiResponse = generateAIResponse(content, imageUrl, userRole);
+      const aiResponse = generateAIResponse(content, !!imageUrl, userRole);
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: aiResponse,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-      setMessages(prev => [...prev, assistantMessage]);
+      setMessages((prev) => [...prev, assistantMessage]);
       setIsTyping(false);
     }, 1500);
   };
@@ -105,10 +106,10 @@ export default function AIAssistantChatInteractive() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header userRole={userRole} />
-      
+
       <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
         <ChatHeader onClose={handleClose} />
-        
+
         <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
           <MessageList messages={messages} isTyping={isTyping} />
           <div ref={messagesEndRef} />
@@ -124,7 +125,11 @@ export default function AIAssistantChatInteractive() {
   );
 }
 
-function generateAIResponse(query: string, hasImage: boolean | undefined, role: 'producer' | 'buyer' | null): string {
+function generateAIResponse(
+  query: string,
+  hasImage: boolean | undefined,
+  role: 'producer' | 'buyer' | null
+): string {
   const lowerQuery = query.toLowerCase();
 
   if (hasImage) {

@@ -13,7 +13,7 @@ interface ShippingPaymentInfoProps {
 const ShippingPaymentInfo = ({
   shippingMethods,
   paymentMethods,
-  terms
+  terms,
 }: ShippingPaymentInfoProps) => {
   return (
     <div className="space-y-6">
@@ -28,7 +28,12 @@ const ShippingPaymentInfo = ({
         <div className="space-y-3">
           {shippingMethods.map((method, index) => (
             <div key={index} className="flex items-start gap-3 p-3 bg-muted/50 rounded-md">
-              <Icon name="CheckCircleIcon" size={18} className="text-accent mt-0.5" variant="solid" />
+              <Icon
+                name="CheckCircleIcon"
+                size={18}
+                className="text-accent mt-0.5"
+                variant="solid"
+              />
               <div className="flex-1">
                 <p className="font-medium text-foreground">{method.name}</p>
                 <p className="text-sm text-muted-foreground">{method.description}</p>
@@ -45,9 +50,7 @@ const ShippingPaymentInfo = ({
       <div className="bg-card border border-border rounded-lg p-6">
         <div className="flex items-center gap-2 mb-4">
           <Icon name="CreditCardIcon" size={20} className="text-primary" />
-          <h2 className="font-heading text-lg font-semibold text-foreground">
-            Métodos de Pago
-          </h2>
+          <h2 className="font-heading text-lg font-semibold text-foreground">Métodos de Pago</h2>
         </div>
         <div className="flex flex-wrap gap-2">
           {paymentMethods.map((method, index) => (

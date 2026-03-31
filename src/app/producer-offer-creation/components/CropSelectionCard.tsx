@@ -1,6 +1,5 @@
 'use client';
 
-
 import Icon from '@/components/ui/AppIcon';
 
 interface CropOption {
@@ -19,14 +18,12 @@ const CropSelectionCard = ({ selectedCrop, onCropSelect }: CropSelectionCardProp
   const cropOptions: CropOption[] = [
     { id: 'cacao', name: 'Cacao', icon: 'CubeIcon', color: 'bg-[#8B5A2B]' },
     { id: 'cafe', name: 'Café', icon: 'BeakerIcon', color: 'bg-[#3A5F3A]' },
-    { id: 'platano', name: 'Plátano', icon: 'SparklesIcon', color: 'bg-primary' }
+    { id: 'platano', name: 'Plátano', icon: 'SparklesIcon', color: 'bg-primary' },
   ];
 
   return (
     <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
-      <h2 className="font-heading text-lg font-semibold text-foreground mb-4">
-        Tipo de Cultivo
-      </h2>
+      <h2 className="font-heading text-lg font-semibold text-foreground mb-4">Tipo de Cultivo</h2>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {cropOptions.map((crop) => (
           <button
@@ -34,9 +31,10 @@ const CropSelectionCard = ({ selectedCrop, onCropSelect }: CropSelectionCardProp
             onClick={() => onCropSelect(crop.id)}
             className={`
               relative p-6 rounded-lg border-2 transition-all animation-ease-out
-              ${selectedCrop === crop.id
-                ? 'border-primary bg-primary/10 shadow-md'
-                : 'border-border hover:border-primary/50 hover:bg-muted'
+              ${
+                selectedCrop === crop.id
+                  ? 'border-primary bg-primary/10 shadow-md'
+                  : 'border-border hover:border-primary/50 hover:bg-muted'
               }
             `}
           >

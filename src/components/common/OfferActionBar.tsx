@@ -20,7 +20,7 @@ const OfferActionBar = ({
   offerTitle = '',
   isFavorite = false,
   onFavoriteToggle,
-  className = ''
+  className = '',
 }: OfferActionBarProps) => {
   const [favorite, setFavorite] = useState(isFavorite);
   const [showShareMenu, setShowShareMenu] = useState(false);
@@ -43,7 +43,7 @@ const OfferActionBar = ({
     const shareData = {
       title: offerTitle,
       text: `Mira esta oferta en ZUMA Marketplace: ${offerTitle}`,
-      url: window.location.href
+      url: window.location.href,
     };
 
     if (navigator.share) {
@@ -63,7 +63,9 @@ const OfferActionBar = ({
   };
 
   return (
-    <div className={`sticky top-16 z-50 bg-background border-b border-border shadow-sm ${className}`}>
+    <div
+      className={`sticky top-16 z-50 bg-background border-b border-border shadow-sm ${className}`}
+    >
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-3">
         <div className="flex items-center justify-between gap-3">
           {/* Primary Action - WhatsApp */}
@@ -100,9 +102,9 @@ const OfferActionBar = ({
               "
               aria-label={favorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
             >
-              <Icon 
-                name="HeartIcon" 
-                size={20} 
+              <Icon
+                name="HeartIcon"
+                size={20}
                 variant={favorite ? 'solid' : 'outline'}
                 className={favorite ? 'text-error' : 'text-foreground'}
               />
@@ -142,10 +144,7 @@ const OfferActionBar = ({
 
       {/* Overlay to close share menu */}
       {showShareMenu && (
-        <div
-          className="fixed inset-0 z-[199]"
-          onClick={() => setShowShareMenu(false)}
-        />
+        <div className="fixed inset-0 z-[199]" onClick={() => setShowShareMenu(false)} />
       )}
     </div>
   );

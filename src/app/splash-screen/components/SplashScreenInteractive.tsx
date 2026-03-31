@@ -23,17 +23,18 @@ const SplashScreenInteractive = () => {
     {
       id: 'producer',
       title: 'Productor',
-      description: 'Vende tus cultivos directamente a compradores globales con precios justos impulsados por IA',
+      description:
+        'Vende tus cultivos directamente a compradores globales con precios justos impulsados por IA',
       iconName: 'UserGroupIcon',
-      route: '/producer-dashboard'
+      route: '/producer-dashboard',
     },
     {
       id: 'buyer',
       title: 'Comprador',
       description: 'Descubre productos agrícolas auténticos de Venezuela con calidad verificada',
       iconName: 'ShoppingBagIcon',
-      route: '/buyer-marketplace-feed'
-    }
+      route: '/buyer-marketplace-feed',
+    },
   ];
 
   const handleAnimationComplete = () => {
@@ -48,14 +49,14 @@ const SplashScreenInteractive = () => {
     if (!selectedRole) return;
 
     setIsTransitioning(true);
-    
+
     // Store role preference
     if (typeof window !== 'undefined') {
       localStorage.setItem('userRole', selectedRole);
     }
 
-    const selectedOption = roleOptions.find(opt => opt.id === selectedRole);
-    
+    const selectedOption = roleOptions.find((opt) => opt.id === selectedRole);
+
     setTimeout(() => {
       if (selectedOption) {
         router.push(selectedOption.route);
@@ -78,17 +79,14 @@ const SplashScreenInteractive = () => {
         {/* Role Selection Section */}
         <div
           className={`transition-all duration-700 ${
-            showRoleSelection
-              ? 'opacity-100 translate-y-0' :'opacity-0 translate-y-8'
+            showRoleSelection ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}
         >
           <div className="text-center mb-8">
             <h2 className="font-heading text-2xl font-semibold text-foreground mb-2">
               Selecciona tu Rol
             </h2>
-            <p className="text-muted-foreground">
-              Elige cómo deseas usar ZUMA Marketplace
-            </p>
+            <p className="text-muted-foreground">Elige cómo deseas usar ZUMA Marketplace</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">

@@ -1,0 +1,172 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  phone        String?
+  role         Role     @default(BUYER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  producerProfile  ProducerProfile?
+  buyerProfile     BuyerProfile?
+  reviewsGiven     Review[]         @relation("ReviewerRelation")
+  reviewsReceived  Review[]         @relation("RevieweeRelation")
+  transactions     Transaction[]    @relation("BuyerTransactions")
+  kycDocuments     KycDocument[]
+}
+
+enum Role {
+  PRODUCER
+  BUYER
+}
+
+model ProducerProfile {
+  id                 String             @id @default(cuid())
+  userId             String             @unique
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessName       String
+  location           String
+  bio                String?
+  certifications     String             @default("[]") // JSON array stored as string
+  verificationStatus VerificationStatus @default(PENDING)
+  trustScore         Float              @default(0)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  offers Offer[]
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model BuyerProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessName String?
+  location     String?
+  preferences  String   @default("[]") // JSON array stored as string
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Offer {
+  id          String      @id @default(cuid())
+  producerId  String
+  producer    ProducerProfile @relation(fields: [producerId], references: [id], onDelete: Cascade)
+  cropType    CropType
+  quantity    Float
+  unit        String      @default("kg")
+  price       Float
+  quality     Quality     @default(B)
+  description String?
+  photos      String      @default("[]") // JSON array stored as string
+  status      OfferStatus @default(ACTIVE)
+  viewCount   Int         @default(0)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  transactions Transaction[]
+  reviews      Review[]
+}
+
+enum CropType {
+  CACAO
+  CAFE
+  PLATANO
+}
+
+enum Quality {
+  A
+  B
+  C
+}
+
+enum OfferStatus {
+  ACTIVE
+  SOLD
+  CANCELLED
+}
+
+model Transaction {
+  id           String            @id @default(cuid())
+  offerId      String
+  offer        Offer             @relation(fields: [offerId], references: [id])
+  buyerId      String
+  buyer        User              @relation("BuyerTransactions", fields: [buyerId], references: [id])
+  producerId   String
+  amount       Float
+  status       TransactionStatus @default(PENDING)
+  escrowStatus EscrowStatus      @default(HELD)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+}
+
+enum TransactionStatus {
+  PENDING
+  ESCROW_HELD
+  DELIVERED
+  COMPLETED
+  DISPUTED
+}
+
+enum EscrowStatus {
+  HELD
+  RELEASED
+  REFUNDED
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  reviewerId String
+  reviewer   User     @relation("ReviewerRelation", fields: [reviewerId], references: [id])
+  revieweeId String
+  reviewee   User     @relation("RevieweeRelation", fields: [revieweeId], references: [id])
+  offerId    String
+  offer      Offer    @relation(fields: [offerId], references: [id])
+  rating     Int      // 1-5
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  @@unique([reviewerId, offerId])
+}
+
+model KycDocument {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  docType    DocType
+  docUrl     String
+  status     KycStatus @default(PENDING)
+  uploadedAt DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+enum DocType {
+  CEDULA
+  RIF
+  LICENCIA_NEGOCIO
+}
+
+enum KycStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}

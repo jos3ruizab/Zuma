@@ -1,6 +1,5 @@
 'use client';
 
-
 import Icon from '@/components/ui/AppIcon';
 
 interface PricingCardProps {
@@ -22,13 +21,11 @@ const PricingCard = ({
   isLoadingAI,
   onPriceVESChange,
   onPriceUSDChange,
-  onGetAIPricing
+  onGetAIPricing,
 }: PricingCardProps) => {
   return (
     <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
-      <h2 className="font-heading text-lg font-semibold text-foreground mb-4">
-        Precio
-      </h2>
+      <h2 className="font-heading text-lg font-semibold text-foreground mb-4">Precio</h2>
 
       {/* AI Pricing Button */}
       <button
@@ -74,9 +71,7 @@ const PricingCard = ({
       {/* Price Inputs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">
-            Precio en VES
-          </label>
+          <label className="block text-sm font-medium text-foreground mb-2">Precio en VES</label>
           <div className="relative">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
               Bs.
@@ -93,9 +88,7 @@ const PricingCard = ({
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">
-            Precio en USD
-          </label>
+          <label className="block text-sm font-medium text-foreground mb-2">Precio en USD</label>
           <div className="relative">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
               $
@@ -116,9 +109,7 @@ const PricingCard = ({
       {/* Exchange Rate Info */}
       <div className="mt-4 p-3 bg-muted rounded-md flex items-center gap-2">
         <Icon name="InformationCircleIcon" size={16} className="text-muted-foreground" />
-        <p className="text-xs text-muted-foreground">
-          Tasa de cambio actual: 1 USD = 36,50 VES
-        </p>
+        <p className="text-xs text-muted-foreground">Tasa de cambio actual: 1 USD = 36,50 VES</p>
       </div>
     </div>
   );

@@ -40,7 +40,10 @@ export default function MessageList({ messages, isTyping }: MessageListProps) {
           <div
             className={`
               max-w-[85%] md:max-w-[70%] rounded-lg px-4 py-3
-              ${message.role === 'user' ?'bg-primary text-primary-foreground' :'bg-card border border-border text-foreground'
+              ${
+                message.role === 'user'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-card border border-border text-foreground'
               }
             `}
           >
@@ -53,18 +56,16 @@ export default function MessageList({ messages, isTyping }: MessageListProps) {
                 />
               </div>
             )}
-            
-            <p className="text-sm whitespace-pre-line leading-relaxed">
-              {message.content}
-            </p>
-            
-            <div className={`flex items-center gap-1 mt-2 text-xs ${
-              message.role === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'
-            }`}>
+
+            <p className="text-sm whitespace-pre-line leading-relaxed">{message.content}</p>
+
+            <div
+              className={`flex items-center gap-1 mt-2 text-xs ${
+                message.role === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'
+              }`}
+            >
               <span>{formatTime(message.timestamp)}</span>
-              {message.role === 'user' && (
-                <Icon name="CheckIcon" size={14} className="ml-1" />
-              )}
+              {message.role === 'user' && <Icon name="CheckIcon" size={14} className="ml-1" />}
             </div>
           </div>
         </div>
@@ -75,9 +76,18 @@ export default function MessageList({ messages, isTyping }: MessageListProps) {
           <div className="bg-card border border-border rounded-lg px-4 py-3 max-w-[85%] md:max-w-[70%]">
             <div className="flex items-center gap-2">
               <div className="flex gap-1">
-                <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <span
+                  className="w-2 h-2 bg-primary rounded-full animate-bounce"
+                  style={{ animationDelay: '0ms' }}
+                />
+                <span
+                  className="w-2 h-2 bg-primary rounded-full animate-bounce"
+                  style={{ animationDelay: '150ms' }}
+                />
+                <span
+                  className="w-2 h-2 bg-primary rounded-full animate-bounce"
+                  style={{ animationDelay: '300ms' }}
+                />
               </div>
               <span className="text-xs text-muted-foreground">Escribiendo...</span>
             </div>

@@ -15,7 +15,7 @@ const AIQualityAssessment = ({
   ripeness,
   consistency,
   analysis,
-  recommendations
+  recommendations,
 }: AIQualityAssessmentProps) => {
   const getScoreColor = (score: number) => {
     if (score >= 90) return 'text-accent';
@@ -39,9 +39,7 @@ const AIQualityAssessment = ({
           <h2 className="font-heading text-lg font-semibold text-foreground">
             Evaluación de Calidad IA
           </h2>
-          <p className="text-xs text-muted-foreground">
-            Análisis realizado por Gemini Pro Vision
-          </p>
+          <p className="text-xs text-muted-foreground">Análisis realizado por Gemini Pro Vision</p>
         </div>
       </div>
 
@@ -68,36 +66,28 @@ const AIQualityAssessment = ({
             <Icon name="EyeIcon" size={18} className="text-primary" />
             <span className="text-sm font-medium text-foreground">Calidad Visual</span>
           </div>
-          <p className={`text-2xl font-bold ${getScoreColor(visualQuality)}`}>
-            {visualQuality}%
-          </p>
+          <p className={`text-2xl font-bold ${getScoreColor(visualQuality)}`}>{visualQuality}%</p>
         </div>
         <div className="bg-background/50 rounded-lg p-4">
           <div className="flex items-center gap-2 mb-2">
             <Icon name="ClockIcon" size={18} className="text-primary" />
             <span className="text-sm font-medium text-foreground">Madurez</span>
           </div>
-          <p className={`text-2xl font-bold ${getScoreColor(ripeness)}`}>
-            {ripeness}%
-          </p>
+          <p className={`text-2xl font-bold ${getScoreColor(ripeness)}`}>{ripeness}%</p>
         </div>
         <div className="bg-background/50 rounded-lg p-4">
           <div className="flex items-center gap-2 mb-2">
             <Icon name="CheckCircleIcon" size={18} className="text-primary" />
             <span className="text-sm font-medium text-foreground">Consistencia</span>
           </div>
-          <p className={`text-2xl font-bold ${getScoreColor(consistency)}`}>
-            {consistency}%
-          </p>
+          <p className={`text-2xl font-bold ${getScoreColor(consistency)}`}>{consistency}%</p>
         </div>
       </div>
 
       {/* Analysis */}
       <div className="mb-4">
         <h3 className="text-sm font-semibold text-foreground mb-2">Análisis Detallado</h3>
-        <p className="text-sm text-foreground leading-relaxed">
-          {analysis}
-        </p>
+        <p className="text-sm text-foreground leading-relaxed">{analysis}</p>
       </div>
 
       {/* Recommendations */}
@@ -107,7 +97,12 @@ const AIQualityAssessment = ({
           <ul className="space-y-2">
             {recommendations.map((rec, index) => (
               <li key={index} className="flex items-start gap-2 text-sm text-foreground">
-                <Icon name="CheckCircleIcon" size={16} className="text-accent mt-0.5 flex-shrink-0" variant="solid" />
+                <Icon
+                  name="CheckCircleIcon"
+                  size={16}
+                  className="text-accent mt-0.5 flex-shrink-0"
+                  variant="solid"
+                />
                 <span>{rec}</span>
               </li>
             ))}

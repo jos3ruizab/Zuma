@@ -11,14 +11,7 @@ interface RoleCardProps {
   onClick: () => void;
 }
 
-const RoleCard = ({
-  role,
-  title,
-  description,
-  iconName,
-  isSelected,
-  onClick
-}: RoleCardProps) => {
+const RoleCard = ({ role, title, description, iconName, isSelected, onClick }: RoleCardProps) => {
   return (
     <button
       onClick={onClick}
@@ -48,12 +41,8 @@ const RoleCard = ({
           />
         </div>
         <div>
-          <h3 className="font-heading text-xl font-semibold text-foreground mb-2">
-            {title}
-          </h3>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            {description}
-          </p>
+          <h3 className="font-heading text-xl font-semibold text-foreground mb-2">{title}</h3>
+          <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
         </div>
       </div>
     </button>

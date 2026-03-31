@@ -12,11 +12,19 @@ export const metadata = {
   icons: {
     icon: [
       { url: '/favicon.ico', type: 'image/x-icon' },
-      { url: '/assets/images/upscalemedia-transformed_1_-1763869666562.png', sizes: '192x192', type: 'image/png' }
+      {
+        url: '/assets/images/upscalemedia-transformed_1_-1763869666562.png',
+        sizes: '192x192',
+        type: 'image/png',
+      },
     ],
     apple: [
-      { url: '/assets/images/upscalemedia-transformed_1_-1763869666562.png', sizes: '180x180', type: 'image/png' }
-    ]
+      {
+        url: '/assets/images/upscalemedia-transformed_1_-1763869666562.png',
+        sizes: '180x180',
+        type: 'image/png',
+      },
+    ],
   },
 };
 
@@ -26,11 +34,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body>{children}
-
-        <script type="module" async src="https://static.rocket.new/rocket-web.js?_cfg=https%3A%2F%2Fzumamarke4103back.builtwithrocket.new&_be=https%3A%2F%2Fappanalytics.rocket.new&_v=0.1.17" />
-        <script type="module" defer src="https://static.rocket.new/rocket-shot.js?v=0.0.2" /></body>
+    <html lang="es">
+      <body>{children}</body>
     </html>
   );
 }

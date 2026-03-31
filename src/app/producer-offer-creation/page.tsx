@@ -5,7 +5,8 @@ import ProducerOfferCreationInteractive from './components/ProducerOfferCreation
 
 export const metadata: Metadata = {
   title: 'Crear Oferta - ZUMA Marketplace',
-  description: 'Publica tus productos agrícolas venezolanos con precios justos recomendados por IA. Conecta directamente con compradores globales.',
+  description:
+    'Publica tus productos agrícolas venezolanos con precios justos recomendados por IA. Conecta directamente con compradores globales.',
 };
 
 export default function ProducerOfferCreationPage() {

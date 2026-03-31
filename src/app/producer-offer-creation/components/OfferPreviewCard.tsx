@@ -16,18 +16,18 @@ const OfferPreviewCard = ({
   unit,
   priceUSD,
   certifications,
-  photos
+  photos,
 }: OfferPreviewCardProps) => {
   const cropNames: Record<string, string> = {
     cacao: 'Cacao',
     cafe: 'Café',
-    platano: 'Plátano'
+    platano: 'Plátano',
   };
 
   const certLabels: Record<string, string> = {
     organic: 'Orgánico',
     'fair-trade': 'Comercio Justo',
-    'quality-seal': 'Sello de Calidad'
+    'quality-seal': 'Sello de Calidad',
   };
 
   return (
@@ -70,9 +70,7 @@ const OfferPreviewCard = ({
             </p>
           </div>
           <div className="text-right">
-            <p className="text-2xl font-bold text-primary">
-              ${priceUSD || '0.00'}
-            </p>
+            <p className="text-2xl font-bold text-primary">${priceUSD || '0.00'}</p>
             <p className="text-xs text-muted-foreground">por {unit}</p>
           </div>
         </div>

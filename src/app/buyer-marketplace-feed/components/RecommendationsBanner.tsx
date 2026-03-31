@@ -35,7 +35,8 @@ const RecommendationsBanner = ({ onDismiss }: RecommendationsBannerProps) => {
             Recomendaciones Inteligentes
           </h3>
           <p className="text-sm text-muted-foreground">
-            Basado en tus preferencias, te sugerimos explorar ofertas de café orgánico de Mérida y cacao premium de Táchira.
+            Basado en tus preferencias, te sugerimos explorar ofertas de café orgánico de Mérida y
+            cacao premium de Táchira.
           </p>
         </div>
         <button

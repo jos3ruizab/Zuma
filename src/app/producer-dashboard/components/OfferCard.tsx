@@ -31,29 +31,29 @@ const OfferCard = ({ offer, onEdit, onShare, onDelete }: OfferCardProps) => {
   const cropIcons = {
     cacao: 'CubeIcon',
     cafe: 'BeakerIcon',
-    platano: 'SparklesIcon'
+    platano: 'SparklesIcon',
   };
 
   const statusConfig = {
     active: {
       label: 'Activa',
       color: 'bg-success text-success-foreground',
-      icon: 'CheckCircleIcon'
+      icon: 'CheckCircleIcon',
     },
     sold: {
       label: 'Vendida',
       color: 'bg-primary text-primary-foreground',
-      icon: 'CheckBadgeIcon'
+      icon: 'CheckBadgeIcon',
     },
     expired: {
       label: 'Expirada',
       color: 'bg-muted text-muted-foreground',
-      icon: 'ClockIcon'
-    }
+      icon: 'ClockIcon',
+    },
   };
 
-  const isExpiringSoon = offer.expiresAt && 
-    new Date(offer.expiresAt).getTime() - Date.now() < 3 * 24 * 60 * 60 * 1000;
+  const isExpiringSoon =
+    offer.expiresAt && new Date(offer.expiresAt).getTime() - Date.now() < 3 * 24 * 60 * 60 * 1000;
 
   return (
     <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all animation-ease-out">
@@ -65,7 +65,9 @@ const OfferCard = ({ offer, onEdit, onShare, onDelete }: OfferCardProps) => {
           className="w-full h-full object-cover"
         />
         <div className="absolute top-3 left-3 flex items-center gap-2">
-          <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusConfig[offer.status].color} flex items-center gap-1`}>
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-medium ${statusConfig[offer.status].color} flex items-center gap-1`}
+          >
             <Icon name={statusConfig[offer.status].icon as any} size={14} variant="solid" />
             {statusConfig[offer.status].label}
           </span>
@@ -86,11 +88,13 @@ const OfferCard = ({ offer, onEdit, onShare, onDelete }: OfferCardProps) => {
         <h3 className="font-heading text-lg font-semibold text-foreground mb-2 line-clamp-1">
           {offer.title}
         </h3>
-        
+
         <div className="flex items-center gap-4 mb-3 text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
             <Icon name="ScaleIcon" size={16} />
-            <span>{offer.quantity} {offer.unit}</span>
+            <span>
+              {offer.quantity} {offer.unit}
+            </span>
           </div>
           <div className="flex items-center gap-1">
             <Icon name="StarIcon" size={16} variant="solid" className="text-primary" />
@@ -164,13 +168,34 @@ const OfferCard = ({ offer, onEdit, onShare, onDelete }: OfferCardProps) => {
         {/* Date Info */}
         <div className="mt-3 text-xs text-muted-foreground">
           {offer.status === 'sold' && offer.soldAt && (
-            <span>Vendida el {new Date(offer.soldAt).toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+            <span>
+              Vendida el{' '}
+              {new Date(offer.soldAt).toLocaleDateString('es-VE', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+              })}
+            </span>
           )}
           {offer.status === 'active' && offer.expiresAt && (
-            <span>Expira el {new Date(offer.expiresAt).toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+            <span>
+              Expira el{' '}
+              {new Date(offer.expiresAt).toLocaleDateString('es-VE', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+              })}
+            </span>
           )}
           {offer.status === 'expired' && (
-            <span>Creada el {new Date(offer.createdAt).toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+            <span>
+              Creada el{' '}
+              {new Date(offer.createdAt).toLocaleDateString('es-VE', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+              })}
+            </span>
           )}
         </div>
       </div>

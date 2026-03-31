@@ -36,7 +36,7 @@ const ProducerOfferCreationInteractive = () => {
     certifications: [],
     photos: [],
     priceVES: '',
-    priceUSD: ''
+    priceUSD: '',
   });
   const [aiSuggestion, setAiSuggestion] = useState({ ves: '', usd: '' });
   const [isLoadingAI, setIsLoadingAI] = useState(false);
@@ -53,16 +53,17 @@ const ProducerOfferCreationInteractive = () => {
       setErrors({
         ...errors,
         cropType: !formData.cropType ? 'Selecciona un tipo de cultivo' : undefined,
-        quantity: !formData.quantity ? 'Ingresa la cantidad disponible' : undefined
+        quantity: !formData.quantity ? 'Ingresa la cantidad disponible' : undefined,
       });
       return;
     }
 
     setIsLoadingAI(true);
-    
+
     // Simulate AI pricing analysis
     setTimeout(() => {
-      const basePrice = formData.cropType === 'cacao' ? 8.5 : formData.cropType === 'cafe' ? 6.2 : 3.8;
+      const basePrice =
+        formData.cropType === 'cacao' ? 8.5 : formData.cropType === 'cafe' ? 6.2 : 3.8;
       const quantity = parseFloat(formData.quantity) || 1;
       const pricePerUnit = basePrice + (Math.random() * 2 - 1);
       const totalUSD = (pricePerUnit * quantity).toFixed(2);
@@ -70,12 +71,12 @@ const ProducerOfferCreationInteractive = () => {
 
       setAiSuggestion({
         usd: `$${totalUSD}`,
-        ves: `Bs. ${totalVES}`
+        ves: `Bs. ${totalVES}`,
       });
       setFormData({
         ...formData,
         priceUSD: totalUSD,
-        priceVES: totalVES
+        priceVES: totalVES,
       });
       setIsLoadingAI(false);
     }, 2000);
@@ -101,27 +102,44 @@ const ProducerOfferCreationInteractive = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) {
       return;
     }
 
     setIsSubmitting(true);
 
-    // Simulate offer creation
-    setTimeout(() => {
-      setIsSubmitting(false);
+    const cropMap: Record<string, string> = { cacao: 'CACAO', cafe: 'CAFE', platano: 'PLATANO' };
+    const payload = {
+      cropType: cropMap[formData.cropType] ?? formData.cropType.toUpperCase(),
+      quantity: parseFloat(formData.quantity),
+      unit: formData.unit,
+      price: parseFloat(formData.priceUSD),
+      quality: 'B',
+      photos: formData.photos,
+    };
+
+    const res = await fetch('/api/offers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    setIsSubmitting(false);
+
+    if (res.ok) {
       setShowSuccess(true);
-      
       setTimeout(() => {
         router.push('/producer-dashboard');
       }, 2000);
-    }, 1500);
+    } else {
+      setErrors({ priceUSD: 'Error al crear la oferta. Verifica que hayas iniciado sesión.' });
+    }
   };
 
   const handleCertificationToggle = (cert: string) => {
     const newCerts = formData.certifications.includes(cert)
-      ? formData.certifications.filter(c => c !== cert)
+      ? formData.certifications.filter((c) => c !== cert)
       : [...formData.certifications, cert];
     setFormData({ ...formData, certifications: newCerts });
   };
@@ -166,9 +184,7 @@ const ProducerOfferCreationInteractive = () => {
                 setErrors({ ...errors, cropType: undefined });
               }}
             />
-            {errors.cropType && (
-              <p className="text-sm text-error -mt-4 ml-2">{errors.cropType}</p>
-            )}
+            {errors.cropType && <p className="text-sm text-error -mt-4 ml-2">{errors.cropType}</p>}
 
             {/* Quantity & Quality */}
             <QuantityQualityCard
@@ -182,9 +198,7 @@ const ProducerOfferCreationInteractive = () => {
               onUnitChange={(value) => setFormData({ ...formData, unit: value })}
               onCertificationToggle={handleCertificationToggle}
             />
-            {errors.quantity && (
-              <p className="text-sm text-error -mt-4 ml-2">{errors.quantity}</p>
-            )}
+            {errors.quantity && <p className="text-sm text-error -mt-4 ml-2">{errors.quantity}</p>}
 
             {/* Photo Upload */}
             <PhotoUploadCard
@@ -194,9 +208,7 @@ const ProducerOfferCreationInteractive = () => {
                 setErrors({ ...errors, photos: undefined });
               }}
             />
-            {errors.photos && (
-              <p className="text-sm text-error -mt-4 ml-2">{errors.photos}</p>
-            )}
+            {errors.photos && <p className="text-sm text-error -mt-4 ml-2">{errors.photos}</p>}
 
             {/* Pricing */}
             <PricingCard
@@ -212,9 +224,7 @@ const ProducerOfferCreationInteractive = () => {
               }}
               onGetAIPricing={handleGetAIPricing}
             />
-            {errors.priceUSD && (
-              <p className="text-sm text-error -mt-4 ml-2">{errors.priceUSD}</p>
-            )}
+            {errors.priceUSD && <p className="text-sm text-error -mt-4 ml-2">{errors.priceUSD}</p>}
 
             {/* Submit Button - Mobile */}
             <div className="lg:hidden">
@@ -270,7 +280,10 @@ const ProducerOfferCreationInteractive = () => {
                 Tu oferta está ahora visible para compradores en todo el mundo
               </p>
               <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-primary animation-pulse-subtle" style={{ width: '100%' }} />
+                <div
+                  className="h-full bg-primary animation-pulse-subtle"
+                  style={{ width: '100%' }}
+                />
               </div>
             </div>
           </div>

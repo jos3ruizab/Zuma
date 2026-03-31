@@ -25,8 +25,10 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
     const file = e.target.files?.[0];
     if (file) {
       // Mock image URL - in production, this would upload to storage
-      const mockImageUrl = 'https://images.pexels.com/photos/4750274/pexels-photo-4750274.jpeg?auto=compress&cs=tinysrgb&w=800';
-      const mockImageAlt = 'Granos de cacao venezolano de alta calidad con coloración marrón oscuro uniforme';
+      const mockImageUrl =
+        'https://images.pexels.com/photos/4750274/pexels-photo-4750274.jpeg?auto=compress&cs=tinysrgb&w=800';
+      const mockImageAlt =
+        'Granos de cacao venezolano de alta calidad con coloración marrón oscuro uniforme';
       setSelectedImage({ url: mockImageUrl, alt: mockImageAlt });
     }
   };
@@ -68,7 +70,7 @@ export default function ChatInput({ onSendMessage }: ChatInputProps) {
             onChange={handleImageSelect}
             className="hidden"
           />
-          
+
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}

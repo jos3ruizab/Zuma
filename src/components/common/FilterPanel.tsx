@@ -28,34 +28,34 @@ const FilterPanel = ({ onFilterChange, className = '' }: FilterPanelProps) => {
     cropType: [],
     priceRange: { min: 0, max: 10000 },
     location: [],
-    certification: []
+    certification: [],
   });
 
   const cropTypes: FilterOption[] = [
     { id: 'coffee', label: 'Café', value: 'coffee' },
     { id: 'cacao', label: 'Cacao', value: 'cacao' },
     { id: 'corn', label: 'Maíz', value: 'corn' },
-    { id: 'beans', label: 'Frijoles', value: 'beans' }
+    { id: 'beans', label: 'Frijoles', value: 'beans' },
   ];
 
   const locations: FilterOption[] = [
     { id: 'merida', label: 'Mérida', value: 'merida' },
     { id: 'tachira', label: 'Táchira', value: 'tachira' },
     { id: 'zulia', label: 'Zulia', value: 'zulia' },
-    { id: 'lara', label: 'Lara', value: 'lara' }
+    { id: 'lara', label: 'Lara', value: 'lara' },
   ];
 
   const certifications: FilterOption[] = [
     { id: 'organic', label: 'Orgánico', value: 'organic' },
     { id: 'fair-trade', label: 'Comercio Justo', value: 'fair-trade' },
-    { id: 'quality-seal', label: 'Sello de Calidad', value: 'quality-seal' }
+    { id: 'quality-seal', label: 'Sello de Calidad', value: 'quality-seal' },
   ];
 
   const handleCropTypeToggle = (value: string) => {
     const newCropTypes = filters.cropType.includes(value)
-      ? filters.cropType.filter(t => t !== value)
+      ? filters.cropType.filter((t) => t !== value)
       : [...filters.cropType, value];
-    
+
     const newFilters = { ...filters, cropType: newCropTypes };
     setFilters(newFilters);
     onFilterChange?.(newFilters);
@@ -63,9 +63,9 @@ const FilterPanel = ({ onFilterChange, className = '' }: FilterPanelProps) => {
 
   const handleLocationToggle = (value: string) => {
     const newLocations = filters.location.includes(value)
-      ? filters.location.filter(l => l !== value)
+      ? filters.location.filter((l) => l !== value)
       : [...filters.location, value];
-    
+
     const newFilters = { ...filters, location: newLocations };
     setFilters(newFilters);
     onFilterChange?.(newFilters);
@@ -73,9 +73,9 @@ const FilterPanel = ({ onFilterChange, className = '' }: FilterPanelProps) => {
 
   const handleCertificationToggle = (value: string) => {
     const newCertifications = filters.certification.includes(value)
-      ? filters.certification.filter(c => c !== value)
+      ? filters.certification.filter((c) => c !== value)
       : [...filters.certification, value];
-    
+
     const newFilters = { ...filters, certification: newCertifications };
     setFilters(newFilters);
     onFilterChange?.(newFilters);
@@ -84,7 +84,7 @@ const FilterPanel = ({ onFilterChange, className = '' }: FilterPanelProps) => {
   const handlePriceChange = (type: 'min' | 'max', value: number) => {
     const newFilters = {
       ...filters,
-      priceRange: { ...filters.priceRange, [type]: value }
+      priceRange: { ...filters.priceRange, [type]: value },
     };
     setFilters(newFilters);
     onFilterChange?.(newFilters);
@@ -95,15 +95,15 @@ const FilterPanel = ({ onFilterChange, className = '' }: FilterPanelProps) => {
       cropType: [],
       priceRange: { min: 0, max: 10000 },
       location: [],
-      certification: []
+      certification: [],
     };
     setFilters(resetFilters);
     onFilterChange?.(resetFilters);
   };
 
-  const activeFilterCount = 
-    filters.cropType.length + 
-    filters.location.length + 
+  const activeFilterCount =
+    filters.cropType.length +
+    filters.location.length +
     filters.certification.length +
     (filters.priceRange.min > 0 || filters.priceRange.max < 10000 ? 1 : 0);
 
@@ -111,20 +111,19 @@ const FilterPanel = ({ onFilterChange, className = '' }: FilterPanelProps) => {
     <div className="space-y-6">
       {/* Crop Type */}
       <div>
-        <h3 className="font-heading text-sm font-semibold text-foreground mb-3">
-          Tipo de Cultivo
-        </h3>
+        <h3 className="font-heading text-sm font-semibold text-foreground mb-3">Tipo de Cultivo</h3>
         <div className="flex flex-wrap gap-2">
-          {cropTypes.map(crop => (
+          {cropTypes.map((crop) => (
             <button
               key={crop.id}
               onClick={() => handleCropTypeToggle(crop.value)}
               className={`
                 px-4 py-2 rounded-md text-sm font-medium
                 transition-all animation-ease-out
-                ${filters.cropType.includes(crop.value)
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                ${
+                  filters.cropType.includes(crop.value)
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
                 }
               `}
             >
@@ -160,15 +159,10 @@ const FilterPanel = ({ onFilterChange, className = '' }: FilterPanelProps) => {
 
       {/* Location */}
       <div>
-        <h3 className="font-heading text-sm font-semibold text-foreground mb-3">
-          Ubicación
-        </h3>
+        <h3 className="font-heading text-sm font-semibold text-foreground mb-3">Ubicación</h3>
         <div className="space-y-2">
-          {locations.map(location => (
-            <label
-              key={location.id}
-              className="flex items-center gap-3 cursor-pointer group"
-            >
+          {locations.map((location) => (
+            <label key={location.id} className="flex items-center gap-3 cursor-pointer group">
               <input
                 type="checkbox"
                 checked={filters.location.includes(location.value)}
@@ -185,15 +179,10 @@ const FilterPanel = ({ onFilterChange, className = '' }: FilterPanelProps) => {
 
       {/* Certification */}
       <div>
-        <h3 className="font-heading text-sm font-semibold text-foreground mb-3">
-          Certificaciones
-        </h3>
+        <h3 className="font-heading text-sm font-semibold text-foreground mb-3">Certificaciones</h3>
         <div className="space-y-2">
-          {certifications.map(cert => (
-            <label
-              key={cert.id}
-              className="flex items-center gap-3 cursor-pointer group"
-            >
+          {certifications.map((cert) => (
+            <label key={cert.id} className="flex items-center gap-3 cursor-pointer group">
               <input
                 type="checkbox"
                 checked={filters.certification.includes(cert.value)}
@@ -213,7 +202,9 @@ const FilterPanel = ({ onFilterChange, className = '' }: FilterPanelProps) => {
   return (
     <>
       {/* Desktop Filter Panel */}
-      <div className={`hidden md:block bg-card border border-border rounded-md shadow-sm ${className}`}>
+      <div
+        className={`hidden md:block bg-card border border-border rounded-md shadow-sm ${className}`}
+      >
         <div className="p-4">
           <div className="flex items-center justify-between mb-4">
             <button

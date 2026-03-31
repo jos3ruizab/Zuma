@@ -19,7 +19,7 @@ const PhotoUploadCard = ({ photos, onPhotosChange }: PhotoUploadCardProps) => {
   };
 
   const handleFiles = (files: File[]) => {
-    const newPhotos = files.slice(0, 4 - photos.length).map(file => URL.createObjectURL(file));
+    const newPhotos = files.slice(0, 4 - photos.length).map((file) => URL.createObjectURL(file));
     onPhotosChange([...photos, ...newPhotos]);
   };
 
@@ -47,12 +47,8 @@ const PhotoUploadCard = ({ photos, onPhotosChange }: PhotoUploadCardProps) => {
   return (
     <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="font-heading text-lg font-semibold text-foreground">
-          Fotos del Producto
-        </h2>
-        <span className="text-sm text-muted-foreground">
-          {photos.length}/4 fotos
-        </span>
+        <h2 className="font-heading text-lg font-semibold text-foreground">Fotos del Producto</h2>
+        <span className="text-sm text-muted-foreground">{photos.length}/4 fotos</span>
       </div>
 
       {/* Upload Area */}
@@ -65,8 +61,10 @@ const PhotoUploadCard = ({ photos, onPhotosChange }: PhotoUploadCardProps) => {
           className={`
             border-2 border-dashed rounded-lg p-8 mb-4 cursor-pointer
             transition-all animation-ease-out
-            ${isDragging
-              ? 'border-primary bg-primary/10' :'border-border hover:border-primary hover:bg-muted'
+            ${
+              isDragging
+                ? 'border-primary bg-primary/10'
+                : 'border-border hover:border-primary hover:bg-muted'
             }
           `}
         >
@@ -78,9 +76,7 @@ const PhotoUploadCard = ({ photos, onPhotosChange }: PhotoUploadCardProps) => {
               <p className="font-medium text-foreground mb-1">
                 Arrastra fotos aquí o haz clic para seleccionar
               </p>
-              <p className="text-sm text-muted-foreground">
-                Máximo 4 imágenes (JPG, PNG)
-              </p>
+              <p className="text-sm text-muted-foreground">Máximo 4 imágenes (JPG, PNG)</p>
             </div>
           </div>
           <input

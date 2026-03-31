@@ -5,7 +5,8 @@ import ProducerDashboardInteractive from './components/ProducerDashboardInteract
 
 export const metadata: Metadata = {
   title: 'Panel de Productor - ZUMA Marketplace',
-  description: 'Gestiona tus ofertas activas, monitorea ventas y visualiza el desempeño de tus productos en el marketplace agrícola ZUMA.',
+  description:
+    'Gestiona tus ofertas activas, monitorea ventas y visualiza el desempeño de tus productos en el marketplace agrícola ZUMA.',
 };
 
 export default function ProducerDashboardPage() {

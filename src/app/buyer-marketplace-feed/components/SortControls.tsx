@@ -21,7 +21,7 @@ const SortControls = ({ onSortChange, className = '' }: SortControlsProps) => {
     { id: 'newest', label: 'Más Recientes', icon: 'ClockIcon' },
     { id: 'price-low', label: 'Precio: Menor a Mayor', icon: 'ArrowUpIcon' },
     { id: 'price-high', label: 'Precio: Mayor a Menor', icon: 'ArrowDownIcon' },
-    { id: 'rating', label: 'Mejor Calificados', icon: 'StarIcon' }
+    { id: 'rating', label: 'Mejor Calificados', icon: 'StarIcon' },
   ];
 
   const handleSortChange = (sortId: string) => {
@@ -30,7 +30,7 @@ const SortControls = ({ onSortChange, className = '' }: SortControlsProps) => {
     onSortChange?.(sortId);
   };
 
-  const selectedOption = sortOptions.find(opt => opt.id === selectedSort);
+  const selectedOption = sortOptions.find((opt) => opt.id === selectedSort);
 
   if (!isHydrated) {
     return (
@@ -51,9 +51,9 @@ const SortControls = ({ onSortChange, className = '' }: SortControlsProps) => {
         >
           <Icon name={selectedOption?.icon as any} size={18} />
           <span className="text-sm font-medium text-foreground">{selectedOption?.label}</span>
-          <Icon 
-            name="ChevronDownIcon" 
-            size={16} 
+          <Icon
+            name="ChevronDownIcon"
+            size={16}
             className={`transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
           />
         </button>
@@ -61,12 +61,9 @@ const SortControls = ({ onSortChange, className = '' }: SortControlsProps) => {
 
       {isDropdownOpen && (
         <>
-          <div
-            className="fixed inset-0 z-[100]"
-            onClick={() => setIsDropdownOpen(false)}
-          />
+          <div className="fixed inset-0 z-[100]" onClick={() => setIsDropdownOpen(false)} />
           <div className="absolute right-0 top-full mt-2 w-56 bg-popover border border-border rounded-md shadow-lg z-[101]">
-            {sortOptions.map(option => (
+            {sortOptions.map((option) => (
               <button
                 key={option.id}
                 onClick={() => handleSortChange(option.id)}

@@ -20,26 +20,26 @@ export default function QuickActions({ onActionClick, userRole }: QuickActionsPr
       id: '1',
       label: 'Precio de Mercado',
       query: '¿Cuál es el precio actual del cacao en el mercado internacional?',
-      icon: 'CurrencyDollarIcon'
+      icon: 'CurrencyDollarIcon',
     },
     {
       id: '2',
       label: 'Calidad de Cultivo',
       query: '¿Cómo puedo evaluar la calidad de mi cultivo de café?',
-      icon: 'BeakerIcon'
+      icon: 'BeakerIcon',
     },
     {
       id: '3',
       label: 'Crear Oferta',
       query: '¿Qué debo incluir en mi oferta para atraer compradores?',
-      icon: 'PlusCircleIcon'
+      icon: 'PlusCircleIcon',
     },
     {
       id: '4',
       label: 'Certificaciones',
       query: '¿Qué certificaciones aumentan el valor de mi producto?',
-      icon: 'ShieldCheckIcon'
-    }
+      icon: 'ShieldCheckIcon',
+    },
   ];
 
   const buyerActions: QuickAction[] = [
@@ -47,26 +47,26 @@ export default function QuickActions({ onActionClick, userRole }: QuickActionsPr
       id: '1',
       label: 'Mejores Ofertas',
       query: '¿Cuáles son las mejores ofertas de cacao disponibles ahora?',
-      icon: 'StarIcon'
+      icon: 'StarIcon',
     },
     {
       id: '2',
       label: 'Verificar Calidad',
       query: '¿Cómo verifico la calidad de un producto antes de comprar?',
-      icon: 'MagnifyingGlassIcon'
+      icon: 'MagnifyingGlassIcon',
     },
     {
       id: '3',
       label: 'Contactar Productor',
       query: '¿Cómo me comunico con un productor?',
-      icon: 'ChatBubbleLeftRightIcon'
+      icon: 'ChatBubbleLeftRightIcon',
     },
     {
       id: '4',
       label: 'Precios Justos',
       query: '¿Cómo sé si un precio es justo para el mercado actual?',
-      icon: 'ScaleIcon'
-    }
+      icon: 'ScaleIcon',
+    },
   ];
 
   const actions = userRole === 'producer' ? producerActions : buyerActions;
@@ -74,9 +74,7 @@ export default function QuickActions({ onActionClick, userRole }: QuickActionsPr
   return (
     <div className="px-4 pb-4">
       <div className="max-w-4xl mx-auto">
-        <p className="text-sm text-muted-foreground mb-3 text-center">
-          Acciones rápidas:
-        </p>
+        <p className="text-sm text-muted-foreground mb-3 text-center">Acciones rápidas:</p>
         <div className="grid grid-cols-2 gap-2">
           {actions.map((action) => (
             <button
@@ -93,9 +91,7 @@ export default function QuickActions({ onActionClick, userRole }: QuickActionsPr
               <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                 <Icon name={action.icon as any} size={20} className="text-primary" />
               </div>
-              <span className="text-sm font-medium text-foreground">
-                {action.label}
-              </span>
+              <span className="text-sm font-medium text-foreground">{action.label}</span>
             </button>
           ))}
         </div>

@@ -28,33 +28,33 @@ const Header = ({ userRole = null }: HeaderProps) => {
       path: '/producer-dashboard',
       icon: 'ChartBarIcon',
       roles: ['producer'],
-      tooltip: 'Gestiona tus ofertas y ventas'
+      tooltip: 'Gestiona tus ofertas y ventas',
     },
     {
       label: 'Crear Oferta',
       path: '/producer-offer-creation',
       icon: 'PlusCircleIcon',
       roles: ['producer'],
-      tooltip: 'Publica un nuevo producto'
+      tooltip: 'Publica un nuevo producto',
     },
     {
       label: 'Mercado',
       path: '/buyer-marketplace-feed',
       icon: 'ShoppingBagIcon',
       roles: ['buyer'],
-      tooltip: 'Explora productos disponibles'
+      tooltip: 'Explora productos disponibles',
     },
     {
       label: 'Mis Compras',
       path: '/offer-details',
       icon: 'ClipboardDocumentListIcon',
       roles: ['buyer'],
-      tooltip: 'Revisa tus pedidos'
-    }
+      tooltip: 'Revisa tus pedidos',
+    },
   ];
 
-  const filteredNavItems = userRole 
-    ? navigationItems.filter(item => item.roles.includes(userRole))
+  const filteredNavItems = userRole
+    ? navigationItems.filter((item) => item.roles.includes(userRole))
     : [];
 
   const isActive = (path: string) => pathname === path;
@@ -99,9 +99,10 @@ const Header = ({ userRole = null }: HeaderProps) => {
                   className={`
                     flex items-center space-x-2 px-4 py-2 rounded-md
                     transition-all animation-ease-out
-                    ${isActive(item.path)
-                      ? 'bg-primary text-primary-foreground shadow-sm'
-                      : 'text-foreground hover:bg-muted hover:text-foreground'
+                    ${
+                      isActive(item.path)
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'text-foreground hover:bg-muted hover:text-foreground'
                     }
                   `}
                   title={item.tooltip}
@@ -122,9 +123,7 @@ const Header = ({ userRole = null }: HeaderProps) => {
                 title="Mi cuenta"
               >
                 <Icon name="UserCircleIcon" size={24} />
-                <span className="hidden lg:block text-sm font-medium text-foreground">
-                  Cuenta
-                </span>
+                <span className="hidden lg:block text-sm font-medium text-foreground">Cuenta</span>
               </button>
             )}
 
@@ -135,10 +134,7 @@ const Header = ({ userRole = null }: HeaderProps) => {
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 aria-label="Toggle menu"
               >
-                <Icon 
-                  name={isMobileMenuOpen ? 'XMarkIcon' : 'Bars3Icon'} 
-                  size={24} 
-                />
+                <Icon name={isMobileMenuOpen ? 'XMarkIcon' : 'Bars3Icon'} size={24} />
               </button>
             )}
           </div>
@@ -155,9 +151,10 @@ const Header = ({ userRole = null }: HeaderProps) => {
                   className={`
                     flex items-center space-x-3 px-4 py-3 rounded-md
                     transition-all animation-ease-out
-                    ${isActive(item.path)
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-foreground hover:bg-muted'
+                    ${
+                      isActive(item.path)
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-foreground hover:bg-muted'
                     }
                   `}
                   onClick={() => setIsMobileMenuOpen(false)}

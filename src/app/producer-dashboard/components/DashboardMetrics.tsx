@@ -13,7 +13,7 @@ const MetricCard = ({ icon, label, value, subValue, trend, trendValue }: MetricC
   const trendColors = {
     up: 'text-success',
     down: 'text-error',
-    neutral: 'text-muted-foreground'
+    neutral: 'text-muted-foreground',
   };
 
   return (
@@ -24,9 +24,15 @@ const MetricCard = ({ icon, label, value, subValue, trend, trendValue }: MetricC
         </div>
         {trend && trendValue && (
           <div className={`flex items-center gap-1 ${trendColors[trend]}`}>
-            <Icon 
-              name={trend === 'up' ? 'ArrowTrendingUpIcon' : trend === 'down' ? 'ArrowTrendingDownIcon' : 'MinusIcon'} 
-              size={16} 
+            <Icon
+              name={
+                trend === 'up'
+                  ? 'ArrowTrendingUpIcon'
+                  : trend === 'down'
+                    ? 'ArrowTrendingDownIcon'
+                    : 'MinusIcon'
+              }
+              size={16}
             />
             <span className="text-sm font-medium">{trendValue}</span>
           </div>
@@ -35,9 +41,7 @@ const MetricCard = ({ icon, label, value, subValue, trend, trendValue }: MetricC
       <div>
         <p className="text-sm text-muted-foreground mb-1">{label}</p>
         <p className="text-2xl font-heading font-bold text-foreground">{value}</p>
-        {subValue && (
-          <p className="text-xs text-muted-foreground mt-1">{subValue}</p>
-        )}
+        {subValue && <p className="text-xs text-muted-foreground mt-1">{subValue}</p>}
       </div>
     </div>
   );

@@ -50,18 +50,18 @@ const OfferCard = ({ offer }: OfferCardProps) => {
 
   const getCropIcon = (cropType: string) => {
     const icons: Record<string, string> = {
-      'Café': 'coffee',
-      'Cacao': 'cacao',
-      'Plátano': 'plantain'
+      Café: 'coffee',
+      Cacao: 'cacao',
+      Plátano: 'plantain',
     };
     return icons[cropType] || 'leaf';
   };
 
   const getCropColor = (cropType: string) => {
     const colors: Record<string, string> = {
-      'Café': 'bg-secondary/10 text-secondary',
-      'Cacao': 'bg-primary/10 text-primary',
-      'Plátano': 'bg-accent/10 text-accent'
+      Café: 'bg-secondary/10 text-secondary',
+      Cacao: 'bg-primary/10 text-primary',
+      Plátano: 'bg-accent/10 text-accent',
     };
     return colors[cropType] || 'bg-muted text-muted-foreground';
   };
@@ -76,9 +76,11 @@ const OfferCard = ({ offer }: OfferCardProps) => {
             alt={offer.images[0].alt}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
-          
+
           {/* Crop Type Badge */}
-          <div className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-medium ${getCropColor(offer.cropType)}`}>
+          <div
+            className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-medium ${getCropColor(offer.cropType)}`}
+          >
             {offer.cropType}
           </div>
 

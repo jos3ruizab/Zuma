@@ -12,22 +12,24 @@ const EmptyState = ({ type }: EmptyStateProps) => {
       title: 'No tienes ofertas activas',
       description: 'Comienza a vender tus productos creando tu primera oferta en el marketplace.',
       actionLabel: 'Crear Primera Oferta',
-      actionLink: '/producer-offer-creation'
+      actionLink: '/producer-offer-creation',
     },
     sold: {
       icon: 'CheckBadgeIcon',
       title: 'Aún no has vendido ningún producto',
-      description: 'Tus ofertas vendidas aparecerán aquí. Sigue promocionando tus productos para conseguir compradores.',
+      description:
+        'Tus ofertas vendidas aparecerán aquí. Sigue promocionando tus productos para conseguir compradores.',
       actionLabel: 'Ver Ofertas Activas',
-      actionLink: '#active'
+      actionLink: '#active',
     },
     filtered: {
       icon: 'FunnelIcon',
       title: 'No se encontraron ofertas',
-      description: 'No hay ofertas que coincidan con los filtros seleccionados. Intenta ajustar tus criterios de búsqueda.',
+      description:
+        'No hay ofertas que coincidan con los filtros seleccionados. Intenta ajustar tus criterios de búsqueda.',
       actionLabel: 'Limpiar Filtros',
-      actionLink: '#'
-    }
+      actionLink: '#',
+    },
   };
 
   const config = content[type];
@@ -40,9 +42,7 @@ const EmptyState = ({ type }: EmptyStateProps) => {
       <h3 className="font-heading text-xl font-semibold text-foreground mb-2 text-center">
         {config.title}
       </h3>
-      <p className="text-muted-foreground text-center max-w-md mb-6">
-        {config.description}
-      </p>
+      <p className="text-muted-foreground text-center max-w-md mb-6">{config.description}</p>
       {type === 'active' ? (
         <Link
           href={config.actionLink}

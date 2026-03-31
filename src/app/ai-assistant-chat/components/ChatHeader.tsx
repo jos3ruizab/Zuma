@@ -25,9 +25,7 @@ export default function ChatHeader({ onClose }: ChatHeaderProps) {
             <h1 className="font-heading text-lg font-semibold text-foreground">
               Asistente IA ZUMA
             </h1>
-            <p className="text-xs text-muted-foreground">
-              Powered by Google Gemini
-            </p>
+            <p className="text-xs text-muted-foreground">Powered by Google Gemini</p>
           </div>
         </div>
 

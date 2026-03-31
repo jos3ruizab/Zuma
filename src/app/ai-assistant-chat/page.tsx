@@ -3,7 +3,8 @@ import AIAssistantChatInteractive from './components/AIAssistantChatInteractive'
 
 export const metadata: Metadata = {
   title: 'Asistente IA - ZUMA Marketplace',
-  description: 'Obtén ayuda inteligente sobre precios de mercado, calidad de cultivos y estrategias de venta con nuestro asistente IA powered by Google Gemini.',
+  description:
+    'Obtén ayuda inteligente sobre precios de mercado, calidad de cultivos y estrategias de venta con nuestro asistente IA powered by Google Gemini.',
 };
 
 export default function AIAssistantChatPage() {
