@@ -5101,7 +5101,7 @@ export default AppImage;
 }
 
 ===FILE: .env===
-GEMINI_API_KEY=AIzaSyDUalcKll6hWihqPylSdVQuInfZ27vtCTw
+GEMINI_API_KEY=
 
 
 ===FILE: .eslintrc.json===
